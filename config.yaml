@@ -201,3 +201,11 @@ frequency_study:                # python -m meta_labeling.research --frequency-s
     - {name: low, label: "Düşük frekans (günlük)", interval: 1d, period: 15y, periods_per_year: 252, bar_duration: "1 gün"}
     - {name: medium, label: "Orta frekans (saatlik)", interval: 1h, period: 730d, periods_per_year: 1764, bar_duration: "1 saat"}
     - {name: high, label: "Yüksek frekans (5 dakikalık)", interval: 5m, period: 60d, periods_per_year: 19656, bar_duration: "5 dakika"}
+
+diagnostics:                    # python -m meta_labeling.research --diagnostics (yalnızca raporlama)
+  feature_shuffle_reps: 3
+  seed_noise_reps: 3
+  event_placebo_reps: 5
+  n_deciles: 10
+  sizing_multipliers: [0.25, 0.5, 0.75, 1.0, 1.25]   # max_position (1.0) üstü kırpılır: kaldıraç yok
+  run_in_frequency_study: true

@@ -114,3 +114,19 @@ yıllıklandırması (252 / 1764 / 19656 bar/yıl) değişir. Çıktı: `researc
 ve her frekans için ayrı 25 bölümlük rapor. Olay sayısı yetersizse (ör. 5 dakikalık bar volatilitesi
 `min_target`'ın altında) çalışma çökmez; ilgili frekans "Test edilemedi — yetersiz veri" olarak raporlanır.
 "5 dakikalık" bar, tick verisi gerektiren gerçek HFT değildir.
+
+## Placebo teşhisleri (`diagnostics.py`)
+
+```bash
+python -m meta_labeling.research --config config.yaml --diagnostics
+```
+
+Placebo testleri neden geçiyor/başarısız oluyor? Yalnızca raporlama yapar (`research_output/<TICKER>/diagnostics_report.md`):
+
+1. **Öznitelik bazında karıştırma:** her öznitelik tek başına karıştırılıp yeniden eğitilir; ΔSharpe / ΔCAGR / Δisabet / Δturnover / ΔAUC, *aynı tohumlarla* eğitilmiş karıştırılmamış modellerin ortalamasına ve tohum gürültü bandına göre raporlanır.
+2. **Olay zamanı placebo'su:** CUSUM → rastgele zaman → rastgele zaman + rastgele yön → tüm barlar; getiri zamanlama, yön ve filtre katkılarına ayrıştırılır.
+3. **Meta-model kalitesi (Sharpe'tan bağımsız):** precision, recall, PR-AUC, koşullu beklenti (alınan vs reddedilen, Welch t), kalibrasyon, P(Y=1) dilimleri.
+4. **Ayrı long / short meta-modelleri** (ortak model ve birincil sinyalle karşılaştırmalı).
+5. **Sizing duyarlılığı:** 0.25x–1.25x (max_position üstü kırpılır, kaldıraç yok).
+
+Ayrıca: maliyet breakeven'ı artık işlem bazlı (ort. brüt getiri / 2 × ort. büyüklük) hesaplanır ve her zaman sonludur; ızgara dışı sonuç "∞" yerine "> 100 bps (ızgaranın dışında)" olarak yazılır. Strateji getirileri Buy&Hold'a regres edilerek alpha/beta raporlanır.

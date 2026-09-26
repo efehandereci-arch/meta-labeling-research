@@ -34,7 +34,7 @@ PCT_ROWS = {"CAGR", "Total Return", "Ann. Volatility", "Max Drawdown", "Win Rate
 
 
 INT_COLS = {"Trades", "Events", "Reps", "n", "n_train", "n_test", "Episodes", "N trials", "Meta trades", "path",
-            "events", "capital", "duration_bars", "recovery_bars"}
+            "events", "capital", "duration_bars", "recovery_bars", "Olay", "OOS olay", "Tekrar", "İşlem"}
 
 
 @dataclass
@@ -92,6 +92,14 @@ def md_rows_table(df: pd.DataFrame) -> str:
         pct, integer = str(idx) in PCT_ROWS, str(idx) in INT_COLS
         lines.append("| " + " | ".join([str(idx)] + [_fmt(v, pct, integer) for v in row]) + " |")
     return "\n".join(lines) + "\n"
+
+
+def grid_breakeven_text(s) -> str:
+    """Izgara enterpolasyonu sonsuzsa bunu ekonomik bir sayı gibi göstermez."""
+    be = s.results["breakeven_cost_bps"]
+    if np.isinf(be):
+        return f"> {s.results['breakeven_grid_max_bps']:.0f} bps (ızgaranın dışında; Sharpe tüm ızgarada pozitif)"
+    return f"{be:.1f} bps"
 
 
 # ------------------------------------------------------------------ tablolar
@@ -180,11 +188,24 @@ def robustness_table(s: ResearchSession) -> tuple[pd.DataFrame, list[str], str]:
         if name.startswith(("A)", "D)")):
             core.append(f"Placebo {name}")
 
-    be = s.results["breakeven_cost_bps"]
-    ok = be >= c.min_breakeven_cost_bps
-    rows.append(_row("Transaction cost breakeven (Meta)", f"{_fmt(be)} bps/yön (eşik {c.min_breakeven_cost_bps})",
-                     PASS if ok else FAIL, "Makul maliyet artışına dayanıklı" if ok
-                     else "Edge küçük maliyet artışlarında kayboluyor"))
+    be = s.results["trade_breakeven_bps"]["Meta"]
+    ok = bool(np.isfinite(be) and be >= c.min_breakeven_cost_bps)
+    rows.append(_row("Transaction cost breakeven (Meta)",
+                     f"işlem bazlı {_fmt(be)} bps/yön (eşik {c.min_breakeven_cost_bps}); ızgara: {grid_breakeven_text(s)}",
+                     PASS if ok else FAIL, "Ortalama işlem, makul maliyet artışına dayanıklı" if ok
+                     else "Ortalama işlem kârı küçük maliyet artışlarında kayboluyor"))
+
+    ab = s.results["alpha_beta"].loc["Meta"]
+    bh_sr = s._runs["Buy&Hold"].metrics["Sharpe"]
+    beta_driven = bool(np.isfinite(ab["beta"]) and ab["beta"] > 0.3 and abs(ab["alpha_t"]) < 2
+                       and bh_sr >= s._runs["Meta"].metrics["Sharpe"])
+    rows.append(_row("Market exposure (Meta alpha/beta vs Buy&Hold)",
+                     f"beta {ab['beta']:.2f}, yıllık alpha {100 * ab['alpha_ann']:.1f}% (t={ab['alpha_t']:.2f}), "
+                     f"Buy&Hold SR {bh_sr:.2f}", INFO,
+                     "Getiri büyük ölçüde piyasa yönünden (beta) geliyor; model seçiciliği anlamlı alpha üretmiyor"
+                     if beta_driven else "Alpha/beta ayrıştırması: getiri yalnızca piyasa maruziyetiyle açıklanmıyor"
+                     if np.isfinite(ab["alpha_t"]) and abs(ab["alpha_t"]) >= 2 else
+                     "Alpha istatistiksel olarak belirsiz (|t| < 2)"))
 
     cp = s.results["cpcv"]
     v = cp.loc[cp["strategy"] == "Meta", "Sharpe"]
@@ -245,9 +266,13 @@ def evidence_sections(s: ResearchSession, table: pd.DataFrame, verdict: str) -> 
         risks.append("Veri SENTETİKTİR: sonuçlar gerçek BIST piyasası hakkında kanıt değildir; simülatörün "
                      "yapısı (rejim değişimi) meta-modelin öğrenebileceği bir sinyal içerecek şekilde tasarlanmıştır.")
     risks.append(s.results["data"]["survivorship"])
-    be = s.results["breakeven_cost_bps"]
+    be = s.results["trade_breakeven_bps"]["Meta"]
     if np.isfinite(be) and be < 30:
-        risks.append(f"Maliyet hassasiyeti: Meta Sharpe yaklaşık {be:.0f} bps/yön maliyette sıfıra iniyor.")
+        risks.append(f"Maliyet hassasiyeti: ortalama meta işlemi yaklaşık {be:.0f} bps/yön maliyette sıfıra iniyor.")
+    ab = s.results["alpha_beta"].loc["Meta"]
+    if np.isfinite(ab["beta"]) and ab["beta"] > 0.3 and abs(ab["alpha_t"]) < 2:
+        risks.append(f"Piyasa maruziyeti: Meta beta {ab['beta']:.2f}, alpha t={ab['alpha_t']:.2f}; getirinin önemli "
+                     "kısmı piyasa yönünden geliyor olabilir.")
     n_tr = s._runs["Meta"].metrics["Trades"]
     if n_tr < 300:
         risks.append(f"Düşük örneklem: yalnızca {n_tr} meta işlem; istatistiksel güç sınırlı.")
@@ -403,8 +428,12 @@ def build_report(s: ResearchSession) -> ResearchReport:
     add(md_table(R["thresholds"]))
 
     add("## 14. Cost Sensitivity\n")
-    add(f"Meta breakeven maliyet ≈ **{_fmt(R['breakeven_cost_bps'])} bps/yön**. Model aynı kalır; yalnızca backtest "
-        "maliyeti değişir.\n")
+    tb = R["trade_breakeven_bps"]
+    add(f"İşlem bazlı breakeven (ort. brüt getiri / 2 x ort. büyüklük): Primary {_fmt(tb['Primary'])}, Meta "
+        f"{_fmt(tb['Meta'])}, Meta+Sizing {_fmt(tb['Meta+Sizing'])} bps/yön. Portföy Sharpe'ının sıfırlandığı "
+        f"maliyet (ızgara): {grid_breakeven_text(s)}. Model aynı kalır; yalnızca backtest maliyeti değişir.\n")
+    add("Alpha/beta (strateji getirisi ~ Buy&Hold getirisi):\n")
+    add(md_table(R["alpha_beta"], set()))
     add(md_table(R["cost_sensitivity"].set_index("cost_bps")))
     cm = R["cost_model"]
     add(f"\n**Parametrik maliyet modeli:** `{cm['formula']}`; parametreler: {cm['params']}."

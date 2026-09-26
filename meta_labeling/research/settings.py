@@ -231,6 +231,18 @@ class CriteriaSettings:
 
 
 @dataclass(frozen=True)
+class DiagnosticsSettings:
+    """Placebo başarısızlıklarını açıklamaya yönelik teşhis analizleri (yalnızca raporlama)."""
+
+    feature_shuffle_reps: int = 3             # her öznitelik için karıştırma tekrarı
+    seed_noise_reps: int = 3                  # karıştırma olmadan farklı model tohumları (gürültü bandı)
+    event_placebo_reps: int = 5               # rastgele olay zamanı şemaları için tekrar
+    n_deciles: int = 10
+    sizing_multipliers: tuple[float, ...] = (0.25, 0.5, 0.75, 1.0, 1.25)
+    run_in_frequency_study: bool = True
+
+
+@dataclass(frozen=True)
 class FrequencyProfile:
     """Frekans çalışması profili. Strateji parametreleri BAR cinsinden aynı kalır;
     yalnızca veri frekansı ve yıllıklandırma değişir."""
@@ -276,6 +288,7 @@ class ResearchConfig:
     analysis: AnalysisSettings = field(default_factory=AnalysisSettings)
     criteria: CriteriaSettings = field(default_factory=CriteriaSettings)
     frequency_study: FrequencyStudySettings = field(default_factory=FrequencyStudySettings)
+    diagnostics: DiagnosticsSettings = field(default_factory=DiagnosticsSettings)
 
     # ------------------------------------------------------------ türetilenler
     @property

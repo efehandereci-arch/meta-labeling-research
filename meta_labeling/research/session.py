@@ -36,12 +36,14 @@ from .execution import (
 from .importance import mdi_importance, permutation_importance_oos, shap_importance_oos
 from .leakage import LeakageReport, run_leakage_audit
 from .metrics import (
+    alpha_beta,
     bootstrap_returns,
     bootstrap_trades,
     deflated_sharpe,
     drawdown_summary,
     per_period_sharpe,
     performance_metrics,
+    trade_breakeven_bps,
     trade_distribution,
 )
 from .modeling import (
@@ -517,7 +519,12 @@ class ResearchSession:
         table = pd.DataFrame(rows)
         self.results["cost_sensitivity"] = table
         meta = table[table["strategy"] == "Meta"].set_index("cost_bps")["Sharpe"]
-        self.results["breakeven_cost_bps"] = _breakeven(meta)
+        self.results["breakeven_cost_bps"] = _breakeven(meta)  # ızgara enterpolasyonu (ızgara dışıysa inf)
+        self.results["breakeven_grid_max_bps"] = float(max(cfg.analysis.cost_grid_bps))
+        self.benchmarks()
+        self.results["trade_breakeven_bps"] = {
+            name: trade_breakeven_bps(self._runs[name].ledger) for name in ("Primary", "Meta", "Meta+Sizing")
+        }
 
         # Parametrik maliyet modeli: sermaye büyüdükçe market impact
         scen = cfg.cost_scenario
@@ -673,6 +680,15 @@ class ResearchSession:
         self.results["periods"] = pd.DataFrame(periods).set_index("period")
         return out
 
+    def event_pool(self) -> pd.DatetimeIndex:
+        """Olay olabilecek barlar: öznitelikler hazır, birincil yön != 0, volatilite > min_target, dikey
+        bariyer veri içinde. Rastgele olay zamanı placebo'ları bu havuzdan örnekler."""
+        cfg = self.cfg
+        valid = self.market.features.notna().all(axis=1) & (self.market.side != 0) & (
+            self.market.vol > cfg.barriers.min_target)
+        valid.iloc[-(cfg.barriers.max_holding_bars + 2):] = False
+        return self.ohlcv.index[valid.to_numpy()]
+
     def period_grid(self, ev: pd.DataFrame) -> tuple[list[tuple[str, pd.Timestamp, pd.Timestamp]], bool]:
         """(etiket, başlangıç, bitiş-hariç) dönemleri. Config dönemleri OOS olaylarının yeterli kısmını
         kapsamıyorsa (kısa intraday veri) OOS penceresi eşit süreli otomatik dönemlere bölünür."""
@@ -749,6 +765,11 @@ class ResearchSession:
             }
             run.metrics["DSR"] = rows[name]["DSR"]
         self.results["stats"] = pd.DataFrame(rows).T
+        market = self._runs["Buy&Hold"].port.returns
+        self.results["alpha_beta"] = pd.DataFrame(
+            {name: alpha_beta(self._runs[name].port.returns, market, self.ppy)
+             for name in ("Primary", "Meta", "Meta+Sizing")}
+        ).T
         bench = self.results["benchmarks"]
         for label, run in self._bench_runs.items():  # E/F dağılım medyanlarıdır; DSR tanımsız
             bench.loc[label, "DSR"] = deflated_sharpe(run.port.returns, trial_srs, n_trials)
@@ -818,11 +839,7 @@ class ResearchSession:
 
         # C) Rastgele olay zamanları (aynı sayıda, birincil yönü olan barlardan)
         c_list = []
-        index = self.ohlcv.index
-        valid = self.market.features.notna().all(axis=1) & (self.market.side != 0) & (
-            self.market.vol > cfg.barriers.min_target)
-        valid.iloc[-(cfg.barriers.max_holding_bars + 2):] = False
-        pool = index[valid.to_numpy()]
+        pool = self.event_pool()
         for r in range(a.placebo_timestamp_reps):
             rng = self.rng(6000 + r)
             t_ev = pool[np.sort(rng.choice(len(pool), size=min(len(self.t_events), len(pool)), replace=False))]
@@ -899,6 +916,14 @@ class ResearchSession:
         self.leakage_audit(full=True)
         self.visualizations()
         return self.final_report()
+
+    def diagnostics(self):
+        """Placebo başarısızlıklarının nedenlerini inceleyen teşhis analizleri (bkz. ``diagnostics.py``)."""
+        from .diagnostics import run_diagnostics
+
+        if "diagnostics" not in self.results:
+            self.results["diagnostics"] = run_diagnostics(self)
+        return self.results["diagnostics"]
 
     def core_summary(self) -> dict[str, Any]:
         """Çoklu varlık taraması için hafif özet (placebo/CPCV olmadan)."""

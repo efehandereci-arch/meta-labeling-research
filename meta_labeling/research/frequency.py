@@ -109,6 +109,10 @@ def run_frequency_study(
                 session = ResearchSession(pcfg, ticker)
             session.run_all()
             rows[profile.label] = _row(session, profile, root)
+            if cfg.diagnostics.run_in_frequency_study:
+                diag = session.diagnostics()
+                rows[profile.label]["Teşhis"] = (diag.path.relative_to(root).as_posix()
+                                                 if diag.path.is_relative_to(root) else str(diag.path))
         except InsufficientDataError as exc:
             log.warning("%s: yetersiz veri — %s", profile.label, exc)
             bars = len(session.ohlcv) if session is not None and session.ohlcv is not None else np.nan
@@ -158,7 +162,7 @@ def _markdown(table: pd.DataFrame, ticker: str, cfg: ResearchConfig, figure: Pat
         "modellemesi gerektiren gerçek HFT değildir.",
         "- Sabit bps maliyet, intraday'de işlem sayısı arttıkça sonuca daha fazla etki eder.",
         "- Sonuçlar tek bir hisseye aittir ve hisse ex-post seçilmiştir (seçim yanlılığı).",
-        "- Her frekansın ayrıntılı 25 bölümlük raporu 'Rapor' sütunundaki dosyadadır.\n",
+        "- Her frekansın ayrıntılı 25 bölümlük raporu 'Rapor', placebo teşhisleri 'Teşhis' sütunundaki dosyadadır.\n",
     ])
 
 

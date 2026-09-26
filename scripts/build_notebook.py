@@ -438,6 +438,23 @@ study = run_frequency_study(cfg)
 display(study.table.drop(columns=["Rapor"]))
 if study.figure:
     display(Image(filename=str(study.figure)))"""),
+    ("markdown", """\
+### (Opsiyonel) Placebo teşhisleri
+
+Öznitelik bazında karıştırma, olay zamanı placebo'su (CUSUM → rastgele → model), meta-model sınıflandırma
+kalitesi (PR-AUC, koşullu beklenti, olasılık dilimleri), ayrı long/short modeller ve sizing duyarlılığı.
+Yalnızca raporlama: sonuçlara göre öznitelik/eşik/büyüklük seçmeyin (~1 dk)."""),
+    ("code", """\
+diag = session.diagnostics()
+for line in diag.explanations:
+    print("-", line)
+display(diag.feature_randomization)
+display(diag.event_time)
+display(diag.deciles)
+display(diag.long_short)
+display(diag.sizing)
+for path in diag.figures.values():
+    display(Image(filename=str(path)))"""),
     ("markdown", "### Tam raporu notebook içinde görüntüle"),
     ("code", """\
 display(Markdown(report.path.read_text(encoding="utf-8")))"""),

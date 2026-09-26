@@ -111,6 +111,45 @@ def per_period_sharpe(returns: pd.Series) -> float:
     return float(returns.mean() / sd) if sd > 0 else 0.0
 
 
+# -------------------------------------------------------------- alpha / beta
+def alpha_beta(strategy: pd.Series, market: pd.Series, periods_per_year: int = 252) -> dict[str, float]:
+    """Strateji getirilerini piyasa (buy & hold) getirilerine regres eder: r_s = a + b r_m + e.
+
+    Yüksek beta ve anlamsız alpha, getirinin model seçiciliğinden değil piyasa yönüne maruz kalmaktan
+    geldiğini gösterir. t-istatistiği OLS standart hatasıyla hesaplanır (otokorelasyon düzeltmesi yok;
+    kaba bir göstergedir).
+    """
+    df = pd.concat([strategy, market], axis=1, join="inner").dropna()
+    if len(df) < 30 or df.iloc[:, 1].var() == 0:
+        return {"beta": np.nan, "alpha_ann": np.nan, "alpha_t": np.nan, "r2": np.nan}
+    y, x = df.iloc[:, 0].to_numpy(), df.iloc[:, 1].to_numpy()
+    xm = x - x.mean()
+    beta = float((xm * (y - y.mean())).sum() / (xm**2).sum())
+    alpha = float(y.mean() - beta * x.mean())
+    resid = y - alpha - beta * x
+    n = len(y)
+    s_e = np.sqrt((resid**2).sum() / (n - 2))
+    se_alpha = s_e * np.sqrt(1.0 / n + x.mean() ** 2 / (xm**2).sum())
+    ss_tot = ((y - y.mean()) ** 2).sum()
+    return {
+        "beta": beta,
+        "alpha_ann": alpha * periods_per_year,
+        "alpha_t": float(alpha / se_alpha) if se_alpha > 0 else np.nan,
+        "r2": float(1 - (resid**2).sum() / ss_tot) if ss_tot > 0 else np.nan,
+    }
+
+
+def trade_breakeven_bps(ledger: pd.DataFrame) -> float:
+    """Ortalama net işlem getirisini sıfırlayan tek yön maliyet (bps).
+
+    c* = ortalama brüt getiri / (2 x ortalama |büyüklük|). Maliyet ızgarasından bağımsız, her zaman
+    sonludur. Negatifse strateji maliyetsiz bile ortalamada kaybettiriyordur.
+    """
+    if ledger is None or ledger.empty or ledger["size"].mean() <= 0:
+        return float("nan")
+    return float(1e4 * ledger["gross"].mean() / (2.0 * ledger["size"].mean()))
+
+
 # -------------------------------------------------------------- drawdown
 def drawdown_episodes(returns: pd.Series) -> pd.DataFrame:
     """Her drawdown dönemi: başlangıç (tepe), dip, toparlanma, derinlik, süre, toparlanma süresi (bar)."""

@@ -8,6 +8,7 @@ Kullanım:
     >>> print(report.verdict)
 """
 
+from .diagnostics import DiagnosticsResult, run_diagnostics
 from .frequency import FrequencyStudyResult, run_frequency_study
 from .leakage import LeakageError, LeakageReport, run_leakage_audit
 from .session import InsufficientDataError, ResearchSession, run_universe
@@ -18,6 +19,7 @@ from .universe import DEFAULT_BIST_TICKERS
 __all__ = [
     "DEFAULT_BIST_TICKERS",
     "ConfigError",
+    "DiagnosticsResult",
     "FrequencyStudyResult",
     "InsufficientDataError",
     "LeakageError",
@@ -27,6 +29,7 @@ __all__ = [
     "config_from_dict",
     "load_research_config",
     "reproduce",
+    "run_diagnostics",
     "run_frequency_study",
     "run_leakage_audit",
     "run_universe",
