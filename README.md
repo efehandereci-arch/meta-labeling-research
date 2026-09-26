@@ -121,6 +121,11 @@ ve her frekans için ayrı 25 bölümlük rapor. Olay sayısı yetersizse (ör. 
 python -m meta_labeling.research --config config.yaml --diagnostics
 ```
 
+> **Notebook'ta `config: bilinmeyen anahtar(lar) ['diagnostics']` hatası:** `config.yaml` ve kod güncel
+> ama Jupyter kernel'i `meta_labeling` paketini bu bölüm eklenmeden önce import etmiş. Kernel → **Restart
+> Kernel** yapıp hücreleri baştan çalıştırın (`git pull` sonrası da aynı adım gerekir). Kontrol için:
+> `python -c "from meta_labeling.research import load_research_config as f; print(f('config.yaml').diagnostics)"`.
+
 Placebo testleri neden geçiyor/başarısız oluyor? Yalnızca raporlama yapar (`research_output/<TICKER>/diagnostics_report.md`):
 
 1. **Öznitelik bazında karıştırma:** her öznitelik tek başına karıştırılıp yeniden eğitilir; ΔSharpe / ΔCAGR / Δisabet / Δturnover / ΔAUC, *aynı tohumlarla* eğitilmiş karıştırılmamış modellerin ortalamasına ve tohum gürültü bandına göre raporlanır.

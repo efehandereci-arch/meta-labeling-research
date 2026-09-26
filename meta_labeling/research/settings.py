@@ -354,7 +354,13 @@ def _build(cls: type, data: dict[str, Any] | None, path: str) -> Any:
     names = {f.name for f in dataclasses.fields(cls)}
     unknown = set(data) - names
     if unknown:
-        raise ConfigError(f"{path}: bilinmeyen anahtar(lar) {sorted(unknown)}")
+        msg = f"{path}: bilinmeyen anahtar(lar) {sorted(unknown)}"
+        if path == "config":
+            # Kodda tanımlı bir bölüm reddediliyorsa Jupyter kernel'i genellikle eski
+            # bir import tutuyordur (ör. ``diagnostics`` eklenmeden önceki modül).
+            msg += (". Bu bölüm kodda tanımlıysa Jupyter kernel'i eski bir import tutuyor "
+                    "olabilir: Kernel → Restart Kernel ile yeniden başlatıp hücreleri baştan çalıştırın.")
+        raise ConfigError(msg)
     hints = typing.get_type_hints(cls)
     kwargs = {k: _coerce(v, hints[k], f"{path}.{k}") for k, v in data.items()}
     try:

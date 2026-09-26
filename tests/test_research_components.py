@@ -1,13 +1,16 @@
 """Araştırma katmanı bileşen testleri: execution, maliyet, risk, CPCV, leakage, kalibrasyon, metrikler."""
 
 from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 import meta_labeling.features as features_mod
 from meta_labeling.research import ConfigError, LeakageError, ResearchConfig, config_from_dict, run_leakage_audit
+from meta_labeling.research import load_research_config
 from meta_labeling.research.cpcv import CombinatorialPurgedKFold
 from meta_labeling.research.execution import cost_rate, events_to_target, simulate_portfolio
 from meta_labeling.research.leakage import calibration_checks, split_checks
@@ -186,3 +189,26 @@ def test_config_rejects_unknown_keys():
         config_from_dict({"primary": {"event_mode": "cusum"}})
     cfg = config_from_dict({"meta_model": {"threshold": 0.6}, "analysis": {"threshold_grid": [0.5, 0.6]}})
     assert cfg.meta_model.threshold == 0.6 and cfg.analysis.threshold_grid == (0.5, 0.6)
+
+
+def test_config_accepts_diagnostics_section():
+    cfg = config_from_dict({"diagnostics": {"feature_shuffle_reps": 7, "sizing_multipliers": [0.5, 1.0],
+                                            "run_in_frequency_study": False}})
+    d = cfg.diagnostics
+    assert d.feature_shuffle_reps == 7 and d.sizing_multipliers == (0.5, 1.0) and d.run_in_frequency_study is False
+    with pytest.raises(ConfigError):
+        config_from_dict({"diagnostics": {"feature_shufle_reps": 7}})
+
+
+def test_yaml_diagnostics_section_is_loaded():
+    root = Path(__file__).resolve().parents[1]
+    raw = yaml.safe_load((root / "config.yaml").read_text(encoding="utf-8"))
+    assert "diagnostics" in raw
+    d = load_research_config(root / "config.yaml").diagnostics
+    assert d.n_deciles == raw["diagnostics"]["n_deciles"]
+    assert d.sizing_multipliers == tuple(raw["diagnostics"]["sizing_multipliers"])
+
+
+def test_unknown_top_level_section_hints_kernel_restart():
+    with pytest.raises(ConfigError, match="Restart Kernel"):
+        config_from_dict({"diagnostcs": {}})
