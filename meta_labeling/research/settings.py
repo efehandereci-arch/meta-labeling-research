@@ -50,6 +50,7 @@ class DataSettings:
     tickers: tuple[str, ...] = ("SASA",)
     csv_dir: str = "data"                # {csv_dir}/{TICKER}.csv
     yfinance_suffix: str = ".IS"
+    yfinance_interval: str = "1d"        # 1d | 1h | 5m ... (yfinance intraday geçmişi sınırlıdır)
     yfinance_period: str = "15y"
     start: str | None = None
     end: str | None = None
@@ -188,7 +189,13 @@ class AnalysisSettings:
         ("2023", "2023-01-01", "2023-12-31"),
         ("2024", "2024-01-01", "2024-12-31"),
         ("2025", "2025-01-01", "2025-12-31"),
+        ("2026", "2026-01-01", "2026-12-31"),
     )
+    # Tanımlı dönemler OOS olaylarının bu oranından azını kapsıyorsa (ör. 60 günlük intraday veri),
+    # OOS penceresi otomatik olarak eşit süreli dönemlere bölünür.
+    min_period_coverage: float = 0.9
+    auto_period_count: int = 6
+    min_oos_events: int = 50                   # altında sonuçlar raporlanmaz (InsufficientDataError)
     feature_groups: dict[str, tuple[str, ...]] = field(
         default_factory=lambda: {
             "atr": ("atr_pct", "atr_vol_ratio"),
@@ -220,6 +227,31 @@ class CriteriaSettings:
     min_breakeven_cost_bps: float = 20.0
     cpcv_min_positive_frac: float = 0.80
     period_min_positive_frac: float = 0.60
+    min_active_periods: int = 3                # daha az aktif dönem varsa test INCONCLUSIVE
+
+
+@dataclass(frozen=True)
+class FrequencyProfile:
+    """Frekans çalışması profili. Strateji parametreleri BAR cinsinden aynı kalır;
+    yalnızca veri frekansı ve yıllıklandırma değişir."""
+
+    name: str = "low"
+    label: str = "Düşük frekans (günlük)"
+    interval: str = "1d"
+    period: str = "15y"
+    periods_per_year: int = 252
+    bar_duration: str = "1 gün"
+
+
+@dataclass(frozen=True)
+class FrequencyStudySettings:
+    ticker: str = "AAPL"
+    yfinance_suffix: str = ""                 # ABD hisseleri için ek yok (BIST: ".IS")
+    profiles: tuple[FrequencyProfile, ...] = (
+        FrequencyProfile("low", "Düşük frekans (günlük)", "1d", "15y", 252, "1 gün"),
+        FrequencyProfile("medium", "Orta frekans (saatlik)", "1h", "730d", 252 * 7, "1 saat"),
+        FrequencyProfile("high", "Yüksek frekans (5 dakikalık)", "5m", "60d", 252 * 78, "5 dakika"),
+    )
 
 
 @dataclass(frozen=True)
@@ -243,6 +275,7 @@ class ResearchConfig:
     regimes: RegimeSettings = field(default_factory=RegimeSettings)
     analysis: AnalysisSettings = field(default_factory=AnalysisSettings)
     criteria: CriteriaSettings = field(default_factory=CriteriaSettings)
+    frequency_study: FrequencyStudySettings = field(default_factory=FrequencyStudySettings)
 
     # ------------------------------------------------------------ türetilenler
     @property
@@ -293,6 +326,9 @@ class ResearchConfig:
 def _coerce(value: Any, hint: Any, path: str) -> Any:
     if dataclasses.is_dataclass(hint):
         return _build(hint, value, path)
+    args = typing.get_args(hint)
+    if isinstance(value, list) and args and dataclasses.is_dataclass(args[0]):
+        return tuple(_build(args[0], v, f"{path}[{i}]") for i, v in enumerate(value))
     if isinstance(value, dict):
         return {k: tuple(v) if isinstance(v, list) else v for k, v in value.items()}
     if isinstance(value, list):

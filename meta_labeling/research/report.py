@@ -196,10 +196,15 @@ def robustness_table(s: ResearchSession) -> tuple[pd.DataFrame, list[str], str]:
     per = s.results["periods"]
     active = per[per["Meta trades"] >= 5]
     pos = float((active["Meta Return"] > 0).mean()) if len(active) else np.nan
-    ok = pos >= c.period_min_positive_frac
-    rows.append(_row("Time-period consistency", f"{pos:.0%} dönem pozitif ({len(active)} aktif dönem)",
-                     PASS if ok else FAIL, "Edge dönemler arasında yayılmış" if ok
-                     else "Edge birkaç döneme yoğunlaşmış olabilir"))
+    auto = " (otomatik dönemler)" if s.results.get("periods_auto") else ""
+    if len(active) < c.min_active_periods:
+        rows.append(_row("Time-period consistency", f"{len(active)} aktif dönem{auto}", INCONCLUSIVE,
+                         f"En az {c.min_active_periods} aktif dönem (>= 5 işlem) gerekli; test karar veremez"))
+    else:
+        ok = pos >= c.period_min_positive_frac
+        rows.append(_row("Time-period consistency", f"{pos:.0%} dönem pozitif ({len(active)} aktif dönem){auto}",
+                         PASS if ok else FAIL, "Edge dönemler arasında yayılmış" if ok
+                         else "Edge birkaç döneme yoğunlaşmış olabilir"))
 
     cal = s.results["calibration"]["metrics"]
     rows.append(_row("Calibration (raw ECE → isotonic ECE)",
@@ -328,7 +333,8 @@ def build_report(s: ResearchSession) -> ResearchReport:
     add("- Edge'in gözlendiği / kaybolduğu koşullar için bkz. Bölüm 15-21 ve Final bölümündeki kanıt listeleri.\n")
 
     add("## 2. Dataset\n")
-    add(f"- Hisse: **{d['ticker']}**, kaynak: `{d['source']}`, {d['bars']} bar ({d['start']} → {d['end']}).")
+    add(f"- Hisse: **{d['ticker']}**, kaynak: `{d['source']}`, {d['bars']} bar ({d['start']} → {d['end']}), "
+        f"yıllıklandırma {cfg.execution.periods_per_year} bar/yıl.")
     for note in d["notes"]:
         add(f"- ⚠️ {note}")
     add(f"- Survivorship: {d['survivorship']}\n")
@@ -382,8 +388,12 @@ def build_report(s: ResearchSession) -> ResearchReport:
     add(md_table(R["benchmarks"]))
 
     add("## 12. Calibration\n")
-    add(f"Kalibratörler (Platt, Isotonic) her fold için yalnızca geçmiş fold'ların kapanmış OOS etiketleriyle fit "
-        f"edildi; {R['calibration']['n_common']} olayda karşılaştırma yapıldı.\n")
+    if R["calibration"].get("calibrated", True):
+        add(f"Kalibratörler (Platt, Isotonic) her fold için yalnızca geçmiş fold'ların kapanmış OOS etiketleriyle "
+            f"fit edildi; {R['calibration']['n_common']} olayda karşılaştırma yapıldı.\n")
+    else:
+        add("⚠️ Geçmiş OOS verisi kalibratör fit etmeye yetmediği için kalibrasyon yapılmadı; yalnızca ham "
+            "olasılıklar raporlandı (gelecek veri kalibrasyonda kullanılmadı).\n")
     add(md_table(R["calibration"]["metrics"]))
     add(img("calibration", "calibration"))
 
@@ -408,6 +418,9 @@ def build_report(s: ResearchSession) -> ResearchReport:
         add(f"### {name}\n")
         add(md_table(t))
     add("### Time periods\n")
+    if R.get("periods_auto"):
+        add(f"Config dönemleri veriyi yeterince kapsamadığı için OOS penceresi {cfg.analysis.auto_period_count} "
+            "eşit süreli döneme bölündü.\n")
     add(md_table(R["periods"]))
 
     add("## 16. Long/Short Analysis\n")

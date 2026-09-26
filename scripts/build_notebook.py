@@ -425,6 +425,19 @@ from meta_labeling.research import DEFAULT_BIST_TICKERS
 
 universe_cfg = replace(cfg, data=replace(cfg.data, tickers=DEFAULT_BIST_TICKERS))
 run_universe(universe_cfg)"""),
+    ("markdown", """\
+### (Opsiyonel) Frekans çalışması: aynı sistem, üç frekans
+
+Aynı ex-ante sistemi `config.yaml → frequency_study` hissesinde (varsayılan AAPL) günlük, saatlik ve
+5 dakikalık veriyle çalıştırır. Strateji parametreleri bar cinsinden aynı kalır; yalnızca veri frekansı ve
+Sharpe yıllıklandırması değişir. İnternet bağlantısı ve `yfinance` gerekir (~5 dk)."""),
+    ("code", """\
+from meta_labeling.research import run_frequency_study
+
+study = run_frequency_study(cfg)
+display(study.table.drop(columns=["Rapor"]))
+if study.figure:
+    display(Image(filename=str(study.figure)))"""),
     ("markdown", "### Tam raporu notebook içinde görüntüle"),
     ("code", """\
 display(Markdown(report.path.read_text(encoding="utf-8")))"""),

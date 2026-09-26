@@ -164,7 +164,7 @@ def distribution_plot(session: ResearchSession, path: Path) -> Path:
     for i, (name, color) in enumerate((("Meta", SERIES[1]), ("Meta+Sizing", SERIES[2]))):
         v = cp.loc[cp["strategy"] == name, "Sharpe"].to_numpy()
         ax1.scatter(np.full(len(v), i) + np.linspace(-0.08, 0.08, len(v)), v, s=64, color=color,
-                    edgecolor=SURFACE, linewidth=2, zorder=3, label=f"{name} (medyan {np.nanmedian(v):.2f})")
+                    edgecolor=SURFACE, linewidth=2, zorder=3, label=f"{name} (medyan {np.nanmedian(v) if np.isfinite(v).any() else float('nan'):.2f})")
     ax1.axhline(0, color=INK_MUTED, lw=1)
     ax1.axhline(real, color=INK, lw=1, ls="--")
     ax1.annotate("walk-forward Meta Sharpe", xy=(1.3, real), fontsize=8, color=INK, va="bottom")

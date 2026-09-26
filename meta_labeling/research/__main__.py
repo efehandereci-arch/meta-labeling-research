@@ -1,4 +1,4 @@
-"""``python -m meta_labeling.research --config config.yaml [--ticker SASA] [--universe]``"""
+"""``python -m meta_labeling.research --config config.yaml [--ticker SASA] [--universe | --frequency-study]``"""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 
 import pandas as pd
 
+from .frequency import run_frequency_study
 from .session import ResearchSession, run_universe
 from .settings import load_research_config
 
@@ -15,9 +16,16 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--ticker", default=None, help="Varsayılan: config'deki ilk hisse")
     parser.add_argument("--universe", action="store_true", help="Tüm config hisselerinde çekirdek OOS testi")
+    parser.add_argument("--frequency-study", action="store_true",
+                        help="Aynı sistemi düşük/orta/yüksek frekansta çalıştır (varsayılan hisse: AAPL)")
     args = parser.parse_args(argv)
     cfg = load_research_config(args.config)
     with pd.option_context("display.width", 200, "display.max_columns", 20):
+        if args.frequency_study:
+            study = run_frequency_study(cfg, args.ticker)
+            print(study.table.drop(columns=["Rapor"], errors="ignore").to_string())
+            print(f"\nÖzet: {study.path}")
+            return
         if args.universe:
             print(run_universe(cfg).round(3).to_string())
             return

@@ -207,6 +207,9 @@ def bootstrap_returns(
         sample = r[idx]
         srs[b] = sharpe(sample, periods_per_year)
         cagrs[b] = cagr(sample, periods_per_year)
+    if np.isnan(srs).all():  # sıfır varyanslı getiri (ör. hiç işlem yok): Sharpe tanımsız
+        return {"sharpe_ci_low": np.nan, "sharpe_median": np.nan, "sharpe_ci_high": np.nan,
+                "p_sharpe_gt_0": np.nan, "p_cagr_lt_0": float(np.mean(cagrs < 0))}
     return {
         "sharpe_ci_low": float(np.nanpercentile(srs, 2.5)),
         "sharpe_median": float(np.nanmedian(srs)),
@@ -228,6 +231,8 @@ def bootstrap_trades(
         s = t[rng.integers(0, len(t), len(t))]
         sd = s.std(ddof=1)
         srs[b] = s.mean() / sd * np.sqrt(trades_per_year) if sd > 0 else np.nan
+    if np.isnan(srs).all():
+        return {}
     return {
         "sharpe_ci_low": float(np.nanpercentile(srs, 2.5)),
         "sharpe_median": float(np.nanmedian(srs)),

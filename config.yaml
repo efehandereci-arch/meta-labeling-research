@@ -20,6 +20,7 @@ data:
   tickers: [SASA]               # çoklu: [SASA, THYAO, ASELS, BIMAS, AKBNK, GARAN, EREGL, TUPRS]
   csv_dir: data                 # source=csv -> data/SASA.csv (Date,Open,High,Low,Close,Volume)
   yfinance_suffix: .IS
+  yfinance_interval: 1d         # 1d | 1h | 5m (intraday geçmişi: 1h ~730 gün, 5m ~60 gün)
   yfinance_period: 15y
   start: null
   end: null
@@ -162,6 +163,10 @@ analysis:
     - ["2023", "2023-01-01", "2023-12-31"]
     - ["2024", "2024-01-01", "2024-12-31"]
     - ["2025", "2025-01-01", "2025-12-31"]
+    - ["2026", "2026-01-01", "2026-12-31"]
+  min_period_coverage: 0.9      # dönemler OOS olaylarının bundan azını kapsıyorsa otomatik dönemler
+  auto_period_count: 6
+  min_oos_events: 50
   feature_groups:
     atr: [atr_pct, atr_vol_ratio]
     skew: [ret_skew]
@@ -187,3 +192,12 @@ criteria:                       # robustness geçme kriterleri (ex-ante)
   min_breakeven_cost_bps: 20.0
   cpcv_min_positive_frac: 0.80
   period_min_positive_frac: 0.60
+  min_active_periods: 3
+
+frequency_study:                # python -m meta_labeling.research --frequency-study
+  ticker: AAPL                  # strateji parametreleri bar cinsinden AYNI kalır;
+  yfinance_suffix: ""           # yalnızca veri frekansı ve yıllıklandırma değişir
+  profiles:
+    - {name: low, label: "Düşük frekans (günlük)", interval: 1d, period: 15y, periods_per_year: 252, bar_duration: "1 gün"}
+    - {name: medium, label: "Orta frekans (saatlik)", interval: 1h, period: 730d, periods_per_year: 1764, bar_duration: "1 saat"}
+    - {name: high, label: "Yüksek frekans (5 dakikalık)", interval: 5m, period: 60d, periods_per_year: 19656, bar_duration: "5 dakika"}

@@ -99,3 +99,18 @@ Jupyter: `notebooks/research_framework.ipynb` (01_config … 24_final_report). �
 Robustness kriterleri (`config.yaml → criteria`) sonuçlara bakmadan tanımlıdır. Placebo testlerinde
 en küçük p-değeri 1/(1+tekrar) olduğundan, tekrar sayısı α'ya ulaşmaya yetmiyorsa test FAIL değil
 **INCONCLUSIVE** olarak raporlanır.
+
+## Frekans çalışması (aynı sistem, üç zaman ölçeği)
+
+```bash
+pip install yfinance
+python -m meta_labeling.research --config config.yaml --frequency-study            # varsayılan: AAPL
+python -m meta_labeling.research --config config.yaml --frequency-study --ticker MSFT
+```
+
+`config.yaml → frequency_study` profilleri: günlük (15 yıl), saatlik (~730 gün), 5 dakikalık (~60 gün;
+yfinance sınırı). Strateji parametreleri **bar cinsinden aynı** kalır; yalnızca veri frekansı ve Sharpe
+yıllıklandırması (252 / 1764 / 19656 bar/yıl) değişir. Çıktı: `research_output/frequency_study_<TICKER>.md|csv|png`
+ve her frekans için ayrı 25 bölümlük rapor. Olay sayısı yetersizse (ör. 5 dakikalık bar volatilitesi
+`min_target`'ın altında) çalışma çökmez; ilgili frekans "Test edilemedi — yetersiz veri" olarak raporlanır.
+"5 dakikalık" bar, tick verisi gerektiren gerçek HFT değildir.

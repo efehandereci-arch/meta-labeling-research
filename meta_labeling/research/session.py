@@ -21,6 +21,7 @@ from sklearn.base import clone
 from sklearn.metrics import roc_auc_score
 
 from ..cv import PurgedKFold, cross_validate_purged
+from ..data import validate_ohlcv
 from ..labeling import apply_triple_barrier, get_vertical_barriers
 from ..model import positive_class_proba
 from .cpcv import CombinatorialPurgedKFold
@@ -59,9 +60,13 @@ from .modeling import (
 )
 from .regimes import UNKNOWN, classify_regimes
 from .settings import CostSettings, ResearchConfig, load_research_config
-from .universe import SurvivorshipControl, load_market, validate_market_data
+from .universe import MarketData, SurvivorshipControl, load_market, validate_market_data
 
 MAIN = ("Primary", "Meta", "Meta+Sizing", "Buy&Hold")
+
+
+class InsufficientDataError(ValueError):
+    """Anlamlı bir OOS testi için yeterli olay yok (ör. kısa intraday veri, düşük volatilite)."""
 
 
 @dataclass
@@ -106,10 +111,19 @@ class ResearchSession:
         self.market: MarketState | None = None
         self.dataset: EventDataset | None = None
         self.oos: OOSPrediction | None = None
+        self._preloaded: MarketData | None = None
 
     @classmethod
     def from_yaml(cls, path: str | Path, ticker: str | None = None) -> "ResearchSession":
         return cls(load_research_config(path), ticker)
+
+    @classmethod
+    def from_ohlcv(cls, cfg: ResearchConfig, ticker: str, ohlcv: pd.DataFrame, source: str = "custom",
+                   simulated: bool = False, notes: list[str] | None = None) -> "ResearchSession":
+        """Hazır bir OHLCV DataFrame'i ile oturum (kendi veri kaynağınız / çevrimdışı çalışma)."""
+        session = cls(cfg, ticker)
+        session._preloaded = MarketData(ticker, validate_ohlcv(ohlcv), source, simulated, list(notes or []))
+        return session
 
     # ----------------------------------------------------------- yardımcılar
     def rng(self, offset: int = 0) -> np.random.Generator:
@@ -187,7 +201,7 @@ class ResearchSession:
     # ================================================================ 03 / 04
     def load_data(self) -> dict[str, Any]:
         if self.ohlcv is None:
-            md = load_market(self.ticker, self.cfg.data)
+            md = self._preloaded or load_market(self.ticker, self.cfg.data)
             self.market_data, self.ohlcv = md, md.ohlcv
             self.survivorship = SurvivorshipControl(self.cfg.data.constituents_file)
             self.member_mask = self.survivorship.membership(self.ticker, self.ohlcv.index)
@@ -261,7 +275,18 @@ class ResearchSession:
     def triple_barrier(self) -> pd.DataFrame:
         self.sample_events()
         if self.dataset is None:
-            self.dataset = build_event_dataset(self.market, self.cfg, self.t_events, self.member_mask)
+            try:
+                self.dataset = build_event_dataset(self.market, self.cfg, self.t_events, self.member_mask)
+            except ValueError as exc:
+                raise InsufficientDataError(
+                    f"{len(self.t_events)} aday olay; Triple Barrier sonrası geçerli olay kalmadı ({exc})"
+                ) from exc
+            n_ev = len(self.dataset.events)
+            if n_ev < max(self.cfg.cv.min_train_events + self.cfg.analysis.min_oos_events, 2 * self.cfg.cv.n_splits):
+                raise InsufficientDataError(
+                    f"yalnızca {n_ev} etiketli olay (volatilite > min_target={self.cfg.barriers.min_target} olan "
+                    "CUSUM olayı sayısı yetersiz)"
+                )
             ev = self.dataset.events
             index = self.ohlcv.index
             hold = index.get_indexer(pd.DatetimeIndex(ev["t1"])) - index.get_indexer(ev.index)
@@ -319,6 +344,12 @@ class ResearchSession:
                 if w not in runs:
                     runs[w] = walk_forward(ds, self.cfg, weighting=w)
             self.oos = runs[main_w]
+            n_oos = int(self.oos.proba.notna().sum())
+            if n_oos < self.cfg.analysis.min_oos_events:
+                raise InsufficientDataError(
+                    f"yalnızca {n_oos} OOS tahmini (eşik {self.cfg.analysis.min_oos_events}); "
+                    "walk-forward için yeterli geçmiş yok"
+                )
             ev = self.oos_events
             rows = {}
             for w, oos in runs.items():
@@ -355,6 +386,11 @@ class ResearchSession:
             res = calibrate_walk_forward(self.oos, ds.y, ds.label_end, m, cc.min_history)
             probs[m], windows[m] = res.proba, res.fit_windows
         common = ev.index[np.all([probs[k].reindex(ev.index).notna() for k in probs], axis=0)]
+        calibrated_ok = len(common) >= cc.min_history // 2 and ev.loc[common, "bin"].nunique() == 2
+        if not calibrated_ok:
+            # Geçmiş OOS verisi kalibratör fit etmeye yetmiyor: yalnızca ham olasılıklar raporlanır
+            self.log.warning("Kalibrasyon atlandı: yalnızca %d olayda geçmişe dayalı kalibrasyon mümkün", len(common))
+            probs, windows, common = {"raw": self.oos.proba}, {}, ev.index
         sub = ev.loc[common]
         metrics, reliability = {}, {}
         win = (sub.index.min(), sub["exit_time"].max()) if len(sub) else self.window
@@ -371,7 +407,8 @@ class ResearchSession:
             "probs": {k: v.reindex(common) for k, v in probs.items()},
             "fit_windows": windows,
             "n_common": len(common),
-            "calibrated_proba": probs.get("isotonic", probs["raw"]),
+            "calibrated": calibrated_ok,
+            "calibrated_proba": probs.get("isotonic") if calibrated_ok else None,
         }
         return self.results["calibration"]["metrics"]
 
@@ -614,23 +651,43 @@ class ResearchSession:
         self.results["regimes"] = out
 
         # Dönem analizi: ana stratejilerin portföy getirileri dönemlere dilimlenir
+        grid, auto = self.period_grid(ev)
+        self.results["periods_auto"] = auto
         periods = []
-        for label, start, end in cfg.analysis.periods:
+        for label, start, end in grid:
             row = {"period": label}
-            sub = ev.loc[start:end]
+            sub = ev[(ev.index >= start) & (ev.index < end)]
             row["Events"] = len(sub)
             row["AUC"] = safe_auc(sub["bin"], sub["proba"]) if len(sub) else np.nan
             taken = sub["proba"] > thr
             row["Precision"] = sub["bin"][taken].mean() if taken.any() else np.nan
             row["Primary precision"] = sub["bin"].mean() if len(sub) else np.nan
             for name in MAIN:
-                r = self._runs[name].port.returns.loc[start:end]
+                r = self._runs[name].port.returns
+                r = r[(r.index >= start) & (r.index < end)]
                 row[f"{name} Sharpe"] = float(r.mean() / r.std() * np.sqrt(self.ppy)) if len(r) > 20 and r.std() > 0 else np.nan
                 row[f"{name} Return"] = float((1 + r).prod() - 1) if len(r) else np.nan
-            row["Meta trades"] = int((self._runs["Meta"].ledger.index.to_series().between(start, end)).sum())
+            led = self._runs["Meta"].ledger
+            row["Meta trades"] = int(((led.index >= start) & (led.index < end)).sum()) if len(led) else 0
             periods.append(row)
         self.results["periods"] = pd.DataFrame(periods).set_index("period")
         return out
+
+    def period_grid(self, ev: pd.DataFrame) -> tuple[list[tuple[str, pd.Timestamp, pd.Timestamp]], bool]:
+        """(etiket, başlangıç, bitiş-hariç) dönemleri. Config dönemleri OOS olaylarının yeterli kısmını
+        kapsamıyorsa (kısa intraday veri) OOS penceresi eşit süreli otomatik dönemlere bölünür."""
+        a = self.cfg.analysis
+        grid = [(lbl, pd.Timestamp(st), pd.Timestamp(en) + pd.Timedelta(days=1)) for lbl, st, en in a.periods]
+        idx = ev.index
+        covered = sum(int(((idx >= st) & (idx < en)).sum()) for _, st, en in grid)
+        if len(idx) and covered / len(idx) >= a.min_period_coverage:
+            return grid, False
+        start, end = self.window
+        edges = [start + (end - start) * k / a.auto_period_count for k in range(a.auto_period_count + 1)]
+        edges[-1] = end + pd.Timedelta(microseconds=1)
+        fmt = "%Y-%m-%d" if (end - start) > pd.Timedelta(days=3 * a.auto_period_count) else "%Y-%m-%d %H:%M"
+        return [(f"{edges[k]:{fmt}} → {edges[k + 1]:{fmt}}", edges[k], edges[k + 1])
+                for k in range(a.auto_period_count)], True
 
     # ================================================================ 19
     def feature_importance(self) -> pd.DataFrame:

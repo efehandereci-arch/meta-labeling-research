@@ -66,13 +66,14 @@ def load_market(ticker: str, cfg: DataSettings) -> MarketData:
         except ImportError as exc:  # pragma: no cover
             raise ImportError("yfinance kaynağı için: pip install yfinance") from exc
         raw = yf.download(f"{ticker}{cfg.yfinance_suffix}", period=cfg.yfinance_period,
-                          interval="1d", auto_adjust=True, progress=False)
+                          interval=cfg.yfinance_interval, auto_adjust=True, progress=False)
         if raw is None or raw.empty:
             raise ValueError(f"yfinance veri döndürmedi: {ticker}")
         if isinstance(raw.columns, pd.MultiIndex):
             raw.columns = raw.columns.get_level_values(0)
         df = validate_ohlcv(raw)
-        notes.append("yfinance: düzeltilmiş (auto_adjust) fiyatlar; veri kalitesi doğrulanmalı.")
+        notes.append(f"yfinance ({cfg.yfinance_interval}, {cfg.yfinance_period}): düzeltilmiş (auto_adjust) "
+                     "fiyatlar; veri kalitesi doğrulanmalı.")
         simulated = False
     else:
         raise ValueError(f"Bilinmeyen veri kaynağı: {cfg.source}")
