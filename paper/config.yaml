@@ -1,0 +1,16 @@
+# BIST 30 paper trading (sanal para). Model/bariyer/overlay ayarları research_config'ten okunur.
+# Bu değerler ileriye dönük test başlamadan önce sabitlendi; değiştirmek yeni bir deney demektir.
+capital: 1000000.0              # sanal başlangıç sermayesi (TL), hisselere eşit bölünür
+tickers: [AEFES, AKBNK, ASELS, ASTOR, BIMAS, EKGYO, ENKAI, EREGL, FROTO, GARAN,
+          GUBRF, ISCTR, KCHOL, KRDMD, MGROS, PETKM, PGSUS, SAHOL, SASA, SISE,
+          TAVHL, TCELL, THYAO, TOASO, TRALT, TRMET, TTKOM, TUPRS, VAKBN, YKBNK]   # BIST 30, 2026 Q4
+suffix: .IS
+market_index: XU100.IS          # meta-model piyasa rejimi
+benchmark_index: XU030.IS       # kıyas
+commission_bps: 10.0            # tek yön
+slippage_bps: 5.0               # açılış fiyatına göre
+min_trade_frac: 0.02            # hisse tahsisinin %2'sinden küçük emirler atlanır
+research_config: config.yaml
+state_dir: paper
+history_period: max
+min_history_bars: 750           # ~3 yıldan kısa geçmişte model görüşü yok -> tam long

@@ -1,0 +1,46 @@
+# BIST 30 paper trading: her iş günü BIST kapanışından sonra (19:20 İstanbul = 16:20 UTC).
+# Actions sekmesinden "Run workflow" ile elle de çalıştırılabilir. Sanal para; gerçek emir verilmez.
+name: paper-trading
+
+on:
+  schedule:
+    - cron: "20 16 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paper-trading
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Bağımlılıklar
+        run: pip install -r requirements.txt yfinance
+
+      - name: Günlük çalıştırma
+        run: python -m meta_labeling.paper --config paper/config.yaml
+
+      - name: Sonuçları commit'le
+        run: |
+          git config user.name "paper-trading-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/
+          if git diff --cached --quiet; then
+            echo "Değişiklik yok (tatil / yeni veri yok)"
+            exit 0
+          fi
+          git commit -m "paper: $(date -u +%F) günlük çalıştırma"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

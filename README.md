@@ -165,6 +165,26 @@ karıştırma placebo'su, vol tavanı ablation'ı ve eşli bootstrap ΔSharpe.
   12 hissede 3 nokta galibiyet, 0 anlamlı galibiyet, 5 anlamlı kayıp. Meta-model AUC ≈ 0.49:
   **tek hisse zamanlamasında öğrenilebilir sinyal bulunamadı.**
 
+## Paper trading: BIST 30, sanal para (`meta_labeling/paper/`)
+
+1.000.000 TL sanal sermaye BIST 30 hisselerine (2026 Q4 listesi) eşit bölünür. Her hisse için long
+meta-labeling overlay pozisyonu belirler. Kıyas olarak aynı sermayeyle eşit ağırlıklı Buy&Hold ve XU030
+tutulur. `.github/workflows/paper-trading.yml` her iş günü 19:20'de (İstanbul) çalışır:
+
+1. yfinance'tan veriyi çeker (bölünme / bedelsiz ve temettüler dahil).
+2. Dünkü emirleri bugünün **açılışından** doldurur: tam lot, 10 bps komisyon + 5 bps kayma, kaldıraç yok.
+3. Kapanıştan değerler, yarının emirlerini yazar.
+4. `paper/` klasörünü commit'ler: `REPORT.md`, `equity.csv`, `trades.csv`, `decisions.csv`, `state.json`.
+
+```bash
+python -m meta_labeling.paper --config paper/config.yaml                                   # canlı (yfinance)
+python -m meta_labeling.paper --config c.yaml --csv-dir data --as-of 2026-09-25 --state-dir tmp   # prova
+```
+
+Model her yeni olayda yalnızca o güne kadar kapanmış etiketlerle yeniden eğitilir. Olayın maruziyeti
+karar anında dondurulur. Hacim verisi bozuk hisselerde (ör. Yahoo'da SASA) model görüş bildirmez ve
+tam long kalır; nedeni `decisions.csv`'de yazar. Ayarlar ileriye dönük test başlamadan sabitlendi.
+
 ## Frekans çalışması (aynı sistem, üç zaman ölçeği)
 
 ```bash
