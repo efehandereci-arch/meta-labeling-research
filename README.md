@@ -145,6 +145,26 @@ Sentetik veride (varsayılan config, SASA simülasyonu) sonuç — **iyileşme y
 
 Bu tek bir sentetik fiyat yolu. Gerçek BIST verisinde test için `data.source: yfinance`.
 
+## Long meta-labeling overlay vs Buy & Hold (`overlay.py`)
+
+```bash
+python -m meta_labeling.research --config config.yaml --overlay-study --dev          # yalnızca holdout_start öncesi
+python -m meta_labeling.research --config config.yaml --overlay-study --robustness   # kilitli test + sağlamlık hisseleri
+```
+
+Kitap varsayılan olarak **tam long** (B&H). Meta-model her CUSUM olayında long bahsin başarısını tahmin
+eder ve beklentisi zayıf olan dönemlerde maruziyeti conformal Kelly ile azaltır. Üstüne bir volatilite
+tavanı uygulanır. Meta-model Joubert'in (2022) dört girdi grubunun hepsini kullanır: birincil modelin
+karnesi, piyasa rejimi, yönlü trend ve çekirdek öznitelikler. Kontroller: modelsiz Kelly, olasılık
+karıştırma placebo'su, vol tavanı ablation'ı ve eşli bootstrap ΔSharpe.
+
+- Profesyonel uygulamalarla bileşen karşılaştırması: [`docs/karsilastirma_profesyonel_meta_labeling.md`](docs/karsilastirma_profesyonel_meta_labeling.md)
+- Ön-kayıt (kilitli testten önce commit'lendi): [`docs/preregistration/long_overlay.md`](docs/preregistration/long_overlay.md)
+- **Sonuçlar:** [`docs/preregistration/long_overlay_results.md`](docs/preregistration/long_overlay_results.md).
+  AAPL'de Sharpe 1.06 vs B&H 0.95. Fark anlamlı değil (P = 0.17), CAGR daha düşük (%18.2 vs %25.9).
+  12 hissede 3 nokta galibiyet, 0 anlamlı galibiyet, 5 anlamlı kayıp. Meta-model AUC ≈ 0.49:
+  **tek hisse zamanlamasında öğrenilebilir sinyal bulunamadı.**
+
 ## Frekans çalışması (aynı sistem, üç zaman ölçeği)
 
 ```bash
