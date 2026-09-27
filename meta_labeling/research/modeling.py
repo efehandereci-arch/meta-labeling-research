@@ -31,6 +31,7 @@ from ..sample_weights import average_uniqueness, num_concurrent_events, return_a
 from ..sampling import sample_events
 from ..sizing import bet_size_from_proba
 from ..volatility import get_volatility
+from .conformal import conformal_kelly
 from .execution import cost_rate, execution_positions
 from .settings import ResearchConfig
 
@@ -268,6 +269,10 @@ def position_sizes(
       prob       : Prado  m = 2Φ(z) - 1,  z = (p - 0.5) / sqrt(p(1-p))
       prob_vol   : prob x vol_target
       kelly      : fraction x max(0, p - (1-p)/b),  b = pt / sl  (fraksiyonel, sınırlı)
+      conformal_kelly      : κ μ̂ / σ̂²; μ̂ gerçekleşmiş kazanç/kayıptan, σ̂ yavaş conformal
+                             kantilden (bkz. ``conformal.py``; ``events`` exec_net_ret ve
+                             label_end içermeli, yalnızca kapanmış işlemler kullanılır)
+      conformal_kelly_dial : conformal_kelly x alt-ihlal drawdown kadranı
     Hiçbir durumda max_position aşılmaz; kaldıraç yoktur.
     """
     thr = cfg.meta_model.threshold if threshold is None else threshold
@@ -288,6 +293,10 @@ def position_sizes(
         frac = cfg.sizing.kelly_fraction if kelly_fraction is None else kelly_fraction
         b = cfg.barriers.pt_mult / cfg.barriers.sl_mult if cfg.barriers.sl_mult > 0 else 1.0
         size = gate * frac * (p - (1.0 - p) / b).clip(lower=0.0)
+    elif method in ("conformal_kelly", "conformal_kelly_dial"):
+        res = conformal_kelly(p, events, cfg.sizing.conformal, cap=cap, threshold=thr,
+                              dial=method == "conformal_kelly_dial")
+        size = res.size.reindex(events.index)
     else:
         raise ValueError(f"Bilinmeyen sizing yöntemi: {method}")
     return size.fillna(0.0).clip(0.0, cap).rename("size")

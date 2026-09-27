@@ -134,12 +134,59 @@ class CostScenarioSettings:
 
 
 @dataclass(frozen=True)
+class ConformalKellySettings:
+    """Conformal Kelly (arXiv:2608.01494) ayarları; bkz. ``conformal.py``.
+
+    Varsayılanlar makaleden alınmıştır (α=0.25, W=500, λ=0.3, β=1, taban 0.25)
+    ve OOS sonuçlarına göre AYARLANMAMIŞTIR. Pencereler olay (işlem) sayısıdır.
+    """
+
+    alpha: float = 0.25                 # aralık kapsaması 1-α
+    window: int = 500                   # rolling kantil için son kapanmış skor sayısı
+    anchor_lambda: float = 0.3          # genişleyen kantile geometrik çekim (0: yalnız rolling)
+    anchor_refresh: int = 21            # anchor her N yeni skorda yeniden hesaplanır, arada bayat tutulur
+    kappa: float = 0.25                 # fraksiyonel Kelly katsayısı
+    score_units: Literal["vol", "raw"] = "vol"   # vol: getiri / σ_t0 ; raw: düz getiri (makale)
+    min_scores: int = 50                # bu kadar skor birikmeden pozisyon açılmaz (ısınma)
+    min_payoff_events: int = 30         # W̄ / L̄ için gereken min. kârlı ve zararlı kapanmış işlem
+    dial_window: int = 21               # drawdown kadranı: son N kapanmış işlemdeki alt ihlal oranı
+    dial_beta: float = 1.0
+    dial_floor: float = 0.25
+    dial_placebo_reps: int = 40         # kadran zamanlaması için dairesel kaydırma placebo'su
+
+    def __post_init__(self):
+        if not 0.0 < self.alpha < 1.0:
+            raise ValueError(f"alpha (0, 1) aralığında olmalı: {self.alpha}")
+        if not 0.0 <= self.anchor_lambda <= 1.0:
+            raise ValueError(f"anchor_lambda [0, 1] aralığında olmalı: {self.anchor_lambda}")
+        if self.score_units not in ("vol", "raw"):
+            raise ValueError(f"score_units 'vol' veya 'raw' olmalı: {self.score_units}")
+        if not 0.0 <= self.dial_floor <= 1.0:
+            raise ValueError(f"dial_floor [0, 1] aralığında olmalı: {self.dial_floor}")
+        for name in ("window", "anchor_refresh", "min_scores", "min_payoff_events", "dial_window"):
+            if getattr(self, name) < 1:
+                raise ValueError(f"{name} >= 1 olmalı: {getattr(self, name)}")
+        if self.kappa <= 0 or self.dial_beta < 0 or self.dial_placebo_reps < 0:
+            raise ValueError("kappa > 0, dial_beta >= 0, dial_placebo_reps >= 0 olmalı")
+
+
+SIZING_METHODS = ("equal", "vol_target", "prob", "prob_vol", "kelly", "conformal_kelly", "conformal_kelly_dial")
+
+
+@dataclass(frozen=True)
 class SizingSettings:
-    method: Literal["equal", "vol_target", "prob", "prob_vol", "kelly"] = "prob"
+    method: Literal[
+        "equal", "vol_target", "prob", "prob_vol", "kelly", "conformal_kelly", "conformal_kelly_dial"
+    ] = "prob"
     step_size: float = 0.0
     vol_target_annual: float = 0.15
     kelly_fraction: float = 0.25
     kelly_fractions: tuple[float, ...] = (0.10, 0.25, 0.50)
+    conformal: ConformalKellySettings = field(default_factory=ConformalKellySettings)
+
+    def __post_init__(self):
+        if self.method not in SIZING_METHODS:
+            raise ValueError(f"Bilinmeyen sizing yöntemi: {self.method} (seçenekler: {', '.join(SIZING_METHODS)})")
 
 
 @dataclass(frozen=True)

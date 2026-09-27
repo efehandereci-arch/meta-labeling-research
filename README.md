@@ -88,7 +88,8 @@ Jupyter: `notebooks/research_framework.ipynb` (01_config … 24_final_report). �
 |---|---|
 | `leakage.py` | `run_leakage_audit()`: öznitelik/vol/sinyal/CUSUM/ADV/rejim kesme testi, etiket sırası, CV/CPCV bölmeleri, kalibrasyon; PASS/FAIL + feature + timestamp + neden |
 | `execution.py` | Sinyal close(t) → işlem open(t+1) (varsayılan) veya close; `komisyon + spread/2 + slippage + k·sqrt(emir/ADV)`; risk limitleri |
-| `modeling.py` | Execution fiyatlı meta-etiketler, purged walk-forward, geçmişe dayalı Platt/Isotonic kalibrasyon, sizing (equal, vol, Prado, prob×vol, fraksiyonel Kelly) |
+| `modeling.py` | Execution fiyatlı meta-etiketler, purged walk-forward, geçmişe dayalı Platt/Isotonic kalibrasyon, sizing (equal, vol, Prado, prob×vol, fraksiyonel Kelly, conformal Kelly) |
+| `conformal.py` | Conformal Kelly (arXiv:2608.01494): ampirik kazanç/kayıp + yavaş conformal ölçek, alt-ihlal drawdown kadranı |
 | `session.py` | Aşama aşama `ResearchSession` (benchmark A-I, maliyet, eşik ızgarası, long/short, rejim, dönem, önem + ablation, bootstrap, CPCV, placebo) |
 | `metrics.py` | CAGR, Sharpe, Sortino, Calmar, PF, turnover, exposure, PSR, DSR, drawdown dönemleri, blok bootstrap |
 | `cpcv.py` | Combinatorial Purged CV ve backtest yolu birleştirme |
@@ -99,6 +100,50 @@ Jupyter: `notebooks/research_framework.ipynb` (01_config … 24_final_report). �
 Robustness kriterleri (`config.yaml → criteria`) sonuçlara bakmadan tanımlıdır. Placebo testlerinde
 en küçük p-değeri 1/(1+tekrar) olduğundan, tekrar sayısı α'ya ulaşmaya yetmiyorsa test FAIL değil
 **INCONCLUSIVE** olarak raporlanır.
+
+## Conformal Kelly sizing (`conformal.py`)
+
+R. J. Ryan, *Conformal Kelly: Conformal Prediction Intervals as the Scale in Fractional Kelly
+Position Sizing* ([arXiv:2608.01494](https://www.alphaxiv.org/abs/2608.01494), 2026) uyarlaması.
+Mevcut `kelly` yöntemi kazanç/kayıp oranını bariyerlerden varsayar (`b = pt/sl`); gerçekleşen
+işlemler ise dikey bariyerde, boşluklu açılışta ve maliyet sonrası kapanır. Conformal Kelly
+Kelly'nin iki girdisini de **karar anında kapanmış** (`label_end < t0`) işlemlerden tahmin eder:
+
+- **Pay:** `μ̂ = p·W̄ − (1−p)·L̄`; W̄/L̄ gerçekleşmiş ortalama net kazanç/kayıp, `p` isotonic-kalibre olasılık.
+- **Payda:** `s = |x − μ̂|` skorlarının son `window` kapanmış işlemdeki (1−α) conformal kantili,
+  genişleyen kantile geometrik çekilir (`q_eff = q_roll^(1−λ)·q_anchor^λ`), `σ̂ = q_eff / Φ⁻¹(1−α/2)`.
+  Makalenin ana bulgusu: ölçek **yavaş** olmalı; hızlı uyum sağlayan her varyant büyümeyi düşürdü.
+- **Pozisyon:** `f = κ·μ̂/σ̂²`, `[0, max_position]` aralığına kırpılır; `μ̂ ≤ 0` ise bahis yok.
+- **Drawdown kadranı** (`conformal_kelly_dial`): son 21 kapanmış işlemde alt sınır ihlali oranı α/2'yi
+  aştıkça kitap küçülür. Zamanlamanın bilgi taşıyıp taşımadığı 40 dairesel kaydırma placebo'su ve
+  sabit kaldıraç kontrolüyle test edilir.
+
+`position_sizing()` (rapor bölüm 22) iki yeni satır (F, G), gerçekleşen kapsama tablosu ve kadran
+placebo testini raporlar; varsayılan `sizing.method` **değişmedi** (`prob`). Ayarlar
+`config.yaml → sizing.conformal` altında, varsayılanlar makaleden alındı ve OOS'a göre ayarlanmadı.
+Makaleden bilinçli sapmalar: skorlar varsayılan olarak σ biriminde (`score_units: vol`, çünkü
+bariyerler `k·σ_t` ölçekli; `raw` makaledeki düz artıktır), Gauss sabiti tutarlı `Φ⁻¹(1−α/2)`,
+kantil sonlu örneklem indeksiyle.
+
+Sentetik veride (varsayılan config, SASA simülasyonu) sonuç — **iyileşme yok, ölçüm doğru**:
+
+| Sizing | İşlem | Sharpe | Max DD | Ort. büyüklük |
+|---|---|---|---|---|
+| D) Probability x volatility | 421 | 0.901 | -4.1% | 0.19 |
+| E) Capped Kelly f=0.25 | 237 | 0.909 | -1.7% | 0.09 |
+| F) Conformal Kelly κ=0.25 | 206 | 0.585 | -19.9% | 0.81 |
+| G) F + drawdown kadranı | 206 | 0.730 | -18.4% | 0.64 |
+
+- Gerçekleşen kapsama %75.5 (nominal %75, iid s.h. %1.3); alt/üst ihlal %12.5 / %12.0: ölçek kalibre.
+- Ampirik `b̂ = W̄/L̄ = 0.93`; bariyer varsayımı 1.00 ile Kelly kırılma olasılığını olduğundan düşük tahmin ediyor.
+- İşlem başına tam Kelly medyanda ~10× kaldıraç istiyor (işlem başı μ/σ ≈ 0.2, işlem σ'sı ≈ %4);
+  κ=0.25'te bile alınan işlemlerin %72'si `max_position`'a dayanıyor (makalede de sınır neredeyse her
+  gün bağlayıcıydı). Bu yüzden F, olasılık bazlı yöntemlerden çok daha yoğun ve oynak. İşlem başına
+  Kelly eşzamanlı (örtüşen) işlemler arasındaki korelasyonu da yok sayar.
+- Kadran Sharpe'ı 0.59 → 0.73'e çıkardı ama placebo p = 0.073 (anlamlı değil), drawdown'da placebo'dan
+  iyi değil (p = 0.61). Sabit kaldıraç kontrolü drawdown'ı kadrandan daha çok azaltıyor.
+
+Bu tek bir sentetik fiyat yolu. Gerçek BIST verisinde test için `data.source: yfinance`.
 
 ## Frekans çalışması (aynı sistem, üç zaman ölçeği)
 

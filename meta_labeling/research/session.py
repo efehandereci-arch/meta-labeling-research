@@ -24,6 +24,7 @@ from ..cv import PurgedKFold, cross_validate_purged
 from ..data import validate_ohlcv
 from ..labeling import apply_triple_barrier, get_vertical_barriers
 from ..model import positive_class_proba
+from .conformal import conformal_kelly
 from .cpcv import CombinatorialPurgedKFold
 from .execution import (
     PortfolioResult,
@@ -569,18 +570,84 @@ class ResearchSession:
             gate = ev["proba"] > cfg.meta_model.threshold
             size = position_sizes(method, p, ev, cfg, threshold=-1.0, **kw) * gate
             run = self.run_signal(f"sizing={label}", ev["side"] * size, ev["t1"], register=True)
-            rows[label] = {**{k: run.metrics[k] for k in ("Trades", "CAGR", "Sharpe", "Max Drawdown", "Turnover", "Exposure")},
-                           "Avg size": float(size[size > 0].mean()) if (size > 0).any() else 0.0,
-                           "Max size": float(size.max())}
+            rows[label] = self._sizing_row(run, size)
+
+        # Conformal Kelly (arXiv:2608.01494): Kelly ile aynı kalibre olasılık, aynı eşik kapısı
+        gate = ev["proba"] > cfg.meta_model.threshold
+        cs = cfg.sizing.conformal
+        ck = conformal_kelly(p_kelly, ev, cs, cap=cfg.risk.max_position, threshold=-1.0, dial=True)
+        undialed = (ck.size_undialed * gate).rename("size")
+        dialed = (ck.size * gate).rename("size")
+        for label, size in ((f"F) Conformal Kelly κ={cs.kappa}", undialed),
+                            (f"G) Conformal Kelly κ={cs.kappa} + drawdown dial", dialed)):
+            run = self.run_signal(f"sizing={label}", ev["side"] * size, ev["t1"], register=True)
+            rows[label] = self._sizing_row(run, size)
+        self.results["conformal"] = {
+            "result": ck,
+            "coverage": ck.coverage_summary(),
+            "dial_test": self._dial_placebo(ck, undialed, dialed, gate),
+        }
+
         self.results["sizing"] = pd.DataFrame(rows).T
+        b_barrier = cfg.barriers.pt_mult / cfg.barriers.sl_mult
+        b_hat = self.results["conformal"]["coverage"]["Son ampirik b̂ = W̄/L̄"]
         self.results["sizing_note"] = (
             "Mevcut bet sizing (Prado, AFML 10.1): z = (p - 0.5)/sqrt(p(1-p)), m = 2Φ(z) - 1, "
             f"pozisyon = side x m, yalnızca p > {cfg.meta_model.threshold}. Kelly: f = fraction x max(0, p - (1-p)/b), "
-            f"b = pt/sl = {cfg.barriers.pt_mult / cfg.barriers.sl_mult:.2f}; Kelly isotonic-kalibre olasılık kullanır "
-            f"({n_fallback} olayda kalibrasyon yok -> ham olasılık). Tüm yöntemler max_position="
-            f"{cfg.risk.max_position} ile sınırlı; kaldıraç yok."
+            f"b = pt/sl = {b_barrier:.2f}; Kelly isotonic-kalibre olasılık kullanır "
+            f"({n_fallback} olayda kalibrasyon yok -> ham olasılık). "
+            f"Conformal Kelly: f = κ μ̂/σ̂², μ̂ = p W̄ - (1-p) L̄ (karar anında kapanmış işlemlerden; son ampirik "
+            f"b̂ = W̄/L̄ = {b_hat:.2f}, bariyer varsayımı {b_barrier:.2f}), σ̂ = q_eff/Φ⁻¹(1-α/2), q_eff yavaş "
+            f"conformal kantil (α={cs.alpha}, W={cs.window}, λ={cs.anchor_lambda}, skor birimi={cs.score_units}); "
+            f"ısınma süresince ({ck.coverage_summary()['Isınma (aralıksız) olay']} olay) pozisyon açılmaz. "
+            f"Tüm yöntemler max_position={cfg.risk.max_position} ile sınırlı; kaldıraç yok."
         )
         return self.results["sizing"]
+
+    @staticmethod
+    def _sizing_row(run: StrategyRun, size: pd.Series) -> dict[str, float]:
+        return {**{k: run.metrics[k] for k in ("Trades", "CAGR", "Sharpe", "Max Drawdown", "Turnover", "Exposure")},
+                "Avg size": float(size[size > 0].mean()) if (size > 0).any() else 0.0,
+                "Max size": float(size.max())}
+
+    def _dial_placebo(self, ck, undialed: pd.Series, dialed: pd.Series, gate: pd.Series) -> pd.DataFrame:
+        """Drawdown kadranının ZAMANLAMASI bilgi taşıyor mu?
+
+        * Dairesel kaydırma placebo'su: kadran serisi olay ekseninde rastgele
+          kaydırılır (dağılımı ve ortalama kaldıracı korunur, zamanlaması bozulur).
+        * Sabit kaldıraç kontrolü: kadransız kitap, kadranın alınan işlemlerdeki
+          ortalamasıyla ölçeklenir (yalnızca kaldıraç azaltmanın etkisi).
+        p = (1 + #placebo metrik >= gerçek) / (1 + tekrar); Max Drawdown negatif
+        olduğundan "daha iyi" = sıfıra daha yakın. Sonuç yalnızca RAPORLANIR.
+        """
+        cfg, ev = self.cfg, self.oos_events
+        reps = cfg.sizing.conformal.dial_placebo_reps
+        dial = ck.dial.reindex(ev.index).to_numpy()
+        taken = (undialed > 0).to_numpy()
+        const = float(dial[taken].mean()) if taken.any() else 1.0
+        real = self.run_signal("Conformal Kelly + dial", ev["side"] * dialed, ev["t1"]).metrics
+        ctrl = self.run_signal("Conformal Kelly x sabit", ev["side"] * undialed * const, ev["t1"]).metrics
+        base = self.run_signal("Conformal Kelly", ev["side"] * undialed, ev["t1"]).metrics
+        rng = np.random.default_rng(cfg.experiment.seed + 7919)
+        n, w = len(dial), cfg.sizing.conformal.dial_window
+        mdd, sr = [], []
+        for _ in range(reps):
+            shift = int(rng.integers(w, max(w + 1, n - w))) if n > 2 * w else int(rng.integers(1, max(2, n)))
+            size = pd.Series(undialed.to_numpy() * np.roll(dial, shift), index=ev.index) * gate
+            m = self.run_signal("dial placebo", ev["side"] * size, ev["t1"]).metrics
+            mdd.append(m["Max Drawdown"])
+            sr.append(m["Sharpe"])
+        rows = {}
+        for name, real_v, ph in (("Max Drawdown", real["Max Drawdown"], np.asarray(mdd)),
+                                 ("Sharpe", real["Sharpe"], np.asarray(sr))):
+            p = (1 + int(np.sum(ph >= real_v))) / (1 + reps) if reps else float("nan")
+            min_p = 1.0 / (1 + reps) if reps else float("nan")
+            status = ("INCONCLUSIVE" if not reps or min_p >= cfg.criteria.placebo_alpha
+                      else ("PASS" if p < cfg.criteria.placebo_alpha else "FAIL"))
+            rows[name] = {"Kadransız": base[name], "Sabit kaldıraç kontrolü": ctrl[name], "Kadranlı": real_v,
+                          "Placebo medyan": float(np.median(ph)) if reps else float("nan"),
+                          "p-değeri": p, "Tekrar": reps, "Durum": status}
+        return pd.DataFrame(rows).T
 
     # ================================================================ 17
     def backtest(self) -> pd.DataFrame:

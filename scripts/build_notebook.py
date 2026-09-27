@@ -373,9 +373,11 @@ print("Meta breakeven maliyet (bps/yön):", round(session.results["breakeven_cos
 display(costs.pivot(index="cost_bps", columns="strategy", values="Sharpe"))
 print(session.results["cost_model"]["formula"])
 session.results["cost_model"]["table"]"""),
-    ("16_position_sizing", "", """\
+    ("16_position_sizing", "Conformal Kelly (arXiv:2608.01494): gerçekleşen kapsama ve drawdown kadranı placebo testi.", """\
 display(session.position_sizing())
-print(session.results["sizing_note"])"""),
+print(session.results["sizing_note"])
+display(pd.Series(session.results["conformal"]["coverage"], name="Conformal kapsama"))
+display(session.results["conformal"]["dial_test"])"""),
     ("17_backtest", "Eşik ızgarası (yalnızca raporlama), long/short, drawdown ve işlem dağılımı.", """\
 display(session.backtest())
 display(session.results["long_short"])

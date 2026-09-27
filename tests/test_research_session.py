@@ -104,3 +104,17 @@ def test_threshold_grid_is_reported_not_selected(session):
 def test_experiment_is_reproducible(session):
     s2 = reproduce(session.results["report"].experiment_path)
     assert s2.results["report"].final_table.equals(session.results["report"].final_table)
+
+
+def test_conformal_kelly_is_reported_with_coverage_and_dial_placebo(session):
+    sizing = session.results["sizing"]
+    assert any(i.startswith("F) Conformal Kelly") for i in sizing.index)
+    assert any(i.startswith("G) Conformal Kelly") for i in sizing.index)
+    assert (sizing["Max size"] <= session.cfg.risk.max_position + 1e-12).all()
+    conf = session.results["conformal"]
+    assert 0.5 < conf["coverage"]["Gerçekleşen kapsama"] < 0.95
+    dt = conf["dial_test"]
+    assert set(dt.index) == {"Max Drawdown", "Sharpe"}
+    assert dt["Durum"].isin([INCONCLUSIVE, "PASS", "FAIL"]).all()
+    report = session.results["report"].markdown
+    assert "Conformal Kelly: aralık kapsaması" in report and "zamanlama placebo testi" in report

@@ -94,6 +94,37 @@ def md_rows_table(df: pd.DataFrame) -> str:
     return "\n".join(lines) + "\n"
 
 
+def conformal_section(conf: dict[str, Any], cfg) -> str:
+    """Rapor bölüm 22 eki: conformal aralık kapsaması ve drawdown kadranı placebo testi."""
+    cs = cfg.sizing.conformal
+    cov = conf["coverage"]
+    rate_keys = {"Nominal kapsama", "Gerçekleşen kapsama", "Std. hata (iid)", "Alt ihlal oranı",
+                 "Üst ihlal oranı", "Referans (α/2)"}
+    lines = ["### Conformal Kelly: aralık kapsaması (arXiv:2608.01494)\n",
+             "Kapsama bir garanti değil, ölçülen bir özelliktir: finansal getiriler değiştirilebilir değildir ve "
+             "etiketler örtüşür (iid standart hata gerçek belirsizliği küçümser). Gerçekleşen kapsama nominalden "
+             "belirgin saparsa σ̂ yanlı demektir ve Kelly büyüklükleri güvenilmez.\n",
+             "| Ölçüt | Değer |", "|---|---|"]
+    for k, v in cov.items():
+        lines.append(f"| {k} | {_fmt(v, pct=k in rate_keys, integer=k.endswith('olay'))} |")
+    lines.append("")
+    dt = conf["dial_test"]
+    lines += [f"### Drawdown kadranı: zamanlama placebo testi ({cs.dial_placebo_reps} dairesel kaydırma)\n",
+              f"Kadran m = clip(1 - {cs.dial_beta} (d - α/2)/(α/2), {cs.dial_floor}, 1); d = son {cs.dial_window} "
+              "kapanmış işlemde alt sınır ihlali oranı. Sabit kaldıraç kontrolü, kadranın etkisinin yalnızca "
+              "ortalama kaldıraç azaltımı olup olmadığını ayırır. Makalede kadran büyümeyi değil drawdown'ı "
+              "iyileştirdi; burada da yalnızca raporlanır, varsayılan sizing'i değiştirmez.\n"]
+    metric_cols = ["Kadransız", "Sabit kaldıraç kontrolü", "Kadranlı", "Placebo medyan"]
+    lines += ["| Metrik | " + " | ".join(metric_cols) + " | p-değeri | Tekrar | Durum |",
+              "|" + "---|" * (len(metric_cols) + 4)]
+    for name, row in dt.iterrows():
+        pct = name == "Max Drawdown"
+        cells = [_fmt(row[c], pct=pct) for c in metric_cols]
+        cells += [_fmt(row["p-değeri"]), _fmt(row["Tekrar"], integer=True), str(row["Durum"])]
+        lines.append(f"| {name} | " + " | ".join(cells) + " |")
+    return "\n".join(lines) + "\n"
+
+
 def grid_breakeven_text(s) -> str:
     """Izgara enterpolasyonu sonsuzsa bunu ekonomik bir sayı gibi göstermez."""
     be = s.results["breakeven_cost_bps"]
@@ -494,6 +525,8 @@ def build_report(s: ResearchSession) -> ResearchReport:
     add("## 22. Position Sizing\n")
     add(R["sizing_note"] + "\n")
     add(md_table(R["sizing"]))
+    if "conformal" in R:
+        add(conformal_section(R["conformal"], cfg))
     rk = cfg.risk
     add(f"Risk limitleri: max_position={rk.max_position}, max_gross_exposure={rk.max_gross_exposure}, "
         f"max_daily_loss={rk.max_daily_loss}, max_drawdown_stop={rk.max_drawdown_stop}, max_turnover={rk.max_turnover} "

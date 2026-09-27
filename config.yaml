@@ -119,11 +119,24 @@ cost_scenario:                  # parametrik maliyet modeli senaryosu (rapor bö
   capital_grid: [1000000.0, 10000000.0, 100000000.0]
 
 sizing:
-  method: prob                  # equal | vol_target | prob | prob_vol | kelly
+  method: prob                  # equal | vol_target | prob | prob_vol | kelly | conformal_kelly | conformal_kelly_dial
   step_size: 0.0
   vol_target_annual: 0.15
   kelly_fraction: 0.25
   kelly_fractions: [0.10, 0.25, 0.50]
+  conformal:                    # Conformal Kelly (arXiv:2608.01494); varsayılanlar makaleden, OOS'a göre ayarlanmadı
+    alpha: 0.25                 # aralık kapsaması 1-α; σ̂ = q_eff / Φ⁻¹(1-α/2)
+    window: 500                 # rolling kantil: son N KAPANMIŞ işlemin skoru (yavaş ölçek = makalenin ana bulgusu)
+    anchor_lambda: 0.3          # q_eff = q_roll^(1-λ) · q_anchor^λ (genişleyen kantile çekim)
+    anchor_refresh: 21          # anchor her 21 yeni skorda güncellenir, arada bayat tutulur
+    kappa: 0.25                 # fraksiyonel Kelly: f = κ μ̂ / σ̂²
+    score_units: vol            # vol: getiri/σ_t0 (bariyerler σ ölçekli) | raw: düz getiri (makale)
+    min_scores: 50              # ısınma: bu kadar skor birikmeden pozisyon yok
+    min_payoff_events: 30       # W̄ / L̄ için min. kapanmış kârlı ve zararlı işlem
+    dial_window: 21             # drawdown kadranı: son 21 kapanmış işlemde alt ihlal oranı
+    dial_beta: 1.0
+    dial_floor: 0.25
+    dial_placebo_reps: 40       # min p = 1/41 ≈ 0.024 < placebo_alpha
 
 risk:                           # null = devre dışı; varsayılanlar optimize EDİLMEDİ
   max_position: 1.0
