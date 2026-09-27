@@ -58,7 +58,7 @@ class PrimaryConfig:
         değiştirdiği barlarda oluşur (klasik "giriş sinyali").
     """
 
-    kind: Literal["ema", "bollinger"] = "ema"
+    kind: Literal["ema", "bollinger", "long"] = "ema"
     ema_fast: int = 10
     ema_slow: int = 40
     ema_neutral_band: float = 0.0      # |fast-slow|/slow bu değerin altındaysa 0 (nötr)

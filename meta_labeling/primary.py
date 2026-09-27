@@ -86,9 +86,29 @@ class BollingerBreakout(PrimaryModel):
         return side.rename("side")
 
 
+@dataclass
+class AlwaysLong(PrimaryModel):
+    """Her barda +1: hisse senedi risk primine dayalı, maksimum recall'lu long birincil model.
+
+    Meta-labeling çerçevesinde (Joubert 2022) birincil model yüksek recall'lı
+    bir yön önerisidir; uzun vadede pozitif sürüklenmesi olan varlıklarda en
+    basit öneri "long"dur. Hangi olayların alınacağına (ve ne büyüklükte)
+    tamamen meta-model karar verir. Long-overlay çalışmasında (``research/overlay.py``)
+    kullanılır.
+    """
+
+    def __post_init__(self) -> None:
+        self.name = "AlwaysLong"
+
+    def side(self, ohlcv: pd.DataFrame) -> pd.Series:
+        return pd.Series(1, index=ohlcv.index, dtype=int, name="side")
+
+
 def build_primary_model(cfg: PrimaryConfig) -> PrimaryModel:
     if cfg.kind == "ema":
         return EMACrossover(cfg.ema_fast, cfg.ema_slow, cfg.ema_neutral_band)
     if cfg.kind == "bollinger":
         return BollingerBreakout(cfg.bb_window, cfg.bb_num_std)
+    if cfg.kind == "long":
+        return AlwaysLong()
     raise ValueError(f"Bilinmeyen birincil model: {cfg.kind}")

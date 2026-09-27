@@ -42,7 +42,7 @@ data:
     t_dof: 5.0
 
 primary:
-  kind: ema                     # ema | bollinger
+  kind: ema                     # ema | bollinger | long (her zaman long; overlay çalışması)
   ema_fast: 10
   ema_slow: 40
   ema_neutral_band: 0.0
@@ -222,3 +222,16 @@ diagnostics:                    # python -m meta_labeling.research --diagnostics
   n_deciles: 10
   sizing_multipliers: [0.25, 0.5, 0.75, 1.0, 1.25]   # max_position (1.0) üstü kırpılır: kaldıraç yok
   run_in_frequency_study: true
+
+overlay:                        # python -m meta_labeling.research --overlay-study (bkz. docs/preregistration/long_overlay.md)
+  market_file: null             # piyasa endeksi CSV (Date,Open,High,Low,Close,Volume), ör. data/SPY.csv
+  holdout_start: "2014-06-12"   # kilitli test başlangıcı; --dev bu tarihten önceki veriyle çalışır
+  trend_features: true          # yönlü öznitelikler: 12-1 momentum, SMA200 uzaklığı, 1 yıllık zirveden düşüş, EMA farkı
+  track_record_window: 50       # birincil modelin son 50 KAPANMIŞ işlemindeki isabet oranı / ort. getirisi
+  vol_cap: true                 # maruziyet x min(1, σ_ref/σ_t), σ_ref = σ'nın genişleyen medyanı
+  vol_cap_min_history: 252
+  default_exposure: 1.0         # meta-modelin görüşü yokken tam long (buy & hold)
+  placebo_reps: 200             # model olasılıkları olaylar arasında karıştırılır
+  bootstrap_reps: 2000          # Sharpe(sistem) - Sharpe(B&H) için eşli durağan bootstrap
+  bootstrap_block: 20
+  robustness_tickers: [MSFT, JPM, XOM, INTC, KO, WMT, GE]

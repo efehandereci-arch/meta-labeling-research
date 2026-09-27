@@ -13,7 +13,7 @@ from .pipeline import MetaLabelingPipeline
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Meta-Labeling + Triple Barrier pipeline")
     parser.add_argument("--csv", help="OHLCV CSV dosyası (Date,Open,High,Low,Close,Volume). Yoksa simülasyon.")
-    parser.add_argument("--primary", choices=["ema", "bollinger"], default=None)
+    parser.add_argument("--primary", choices=["ema", "bollinger", "long"], default=None)
     parser.add_argument("--events", choices=["cusum", "signal"], default=None, help="Olay örnekleme modu")
     parser.add_argument("--model", choices=["lgbm", "rf"], default=None)
     parser.add_argument("--threshold", type=float, default=None, help="P(Y=1) eşiği")

@@ -62,7 +62,7 @@ class DataSettings:
 class PrimarySettings:
     """Birincil (yön) modeli. Olay örnekleme alanları ``cusum`` bölümündedir."""
 
-    kind: Literal["ema", "bollinger"] = "ema"
+    kind: Literal["ema", "bollinger", "long"] = "ema"
     ema_fast: int = 10
     ema_slow: int = 40
     ema_neutral_band: float = 0.0
@@ -290,6 +290,37 @@ class DiagnosticsSettings:
 
 
 @dataclass(frozen=True)
+class OverlaySettings:
+    """Long meta-labeling overlay çalışması (``overlay.py``, ``--overlay-study``).
+
+    Kitap varsayılan olarak hissede TAM long'dur (buy & hold). Meta-model her CUSUM
+    olayında "şimdi alınan bir long pozisyon üst bariyere mi ulaşır?" sorusunu
+    yanıtlar; beklentisi negatif olan olayların tutma penceresinde maruziyet
+    conformal Kelly büyüklüğüne indirilir. Ayrıca maruziyet volatilite tavanıyla
+    çarpılır: min(1, σ_ref / σ_t). Kaldıraç yoktur. Varsayılanlar ön-kayıtlıdır
+    (docs/preregistration/long_overlay.md) ve test verisine göre ayarlanmamıştır.
+    """
+
+    market_file: str | None = None       # piyasa endeksi CSV'si (ör. SPY / XU100) -> rejim öznitelikleri
+    holdout_start: str = "2014-06-12"    # kilitli test başlangıcı; geliştirme bu tarihten ÖNCEKİ veriyle
+    trend_features: bool = True          # yönlü trend/momentum öznitelikleri (long bahis için)
+    track_record_window: int = 50        # birincil modelin son N KAPANMIŞ işlemdeki isabet/getirisi
+    vol_cap: bool = True
+    vol_cap_min_history: int = 252       # σ_ref = σ_t'nin genişleyen medyanı; bu kadar bar olmadan tavan 1
+    default_exposure: float = 1.0        # meta-modelin görüşü olmayan barlarda (ısınma / aktif olay yok)
+    placebo_reps: int = 200              # model olasılıklarının olaylar arasında karıştırıldığı placebo
+    bootstrap_reps: int = 2000           # Sharpe farkı (sistem - B&H) için eşli durağan bootstrap
+    bootstrap_block: int = 20
+    robustness_tickers: tuple[str, ...] = ("MSFT", "JPM", "XOM", "INTC", "KO", "WMT", "GE")
+
+    def __post_init__(self):
+        if not 0.0 <= self.default_exposure <= 1.0:
+            raise ValueError(f"default_exposure [0, 1] aralığında olmalı: {self.default_exposure}")
+        if self.track_record_window < 5:
+            raise ValueError("track_record_window >= 5 olmalı")
+
+
+@dataclass(frozen=True)
 class FrequencyProfile:
     """Frekans çalışması profili. Strateji parametreleri BAR cinsinden aynı kalır;
     yalnızca veri frekansı ve yıllıklandırma değişir."""
@@ -336,6 +367,7 @@ class ResearchConfig:
     criteria: CriteriaSettings = field(default_factory=CriteriaSettings)
     frequency_study: FrequencyStudySettings = field(default_factory=FrequencyStudySettings)
     diagnostics: DiagnosticsSettings = field(default_factory=DiagnosticsSettings)
+    overlay: OverlaySettings = field(default_factory=OverlaySettings)
 
     # ------------------------------------------------------------ türetilenler
     @property
