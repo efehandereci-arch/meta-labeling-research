@@ -1,0 +1,167 @@
+{
+ "bench_start": 15947.0,
+ "books": {
+  "buyhold": {
+   "cash": 1000000.0,
+   "pending": {
+    "AEFES": 1767,
+    "AKBNK": 469,
+    "ASELS": 89,
+    "ASTOR": 127,
+    "BIMAS": 78,
+    "EKGYO": 1729,
+    "ENKAI": 385,
+    "EREGL": 881,
+    "FROTO": 433,
+    "GARAN": 256,
+    "GUBRF": 72,
+    "ISCTR": 2546,
+    "KCHOL": 153,
+    "KRDMD": 708,
+    "MGROS": 63,
+    "PETKM": 1580,
+    "PGSUS": 226,
+    "SAHOL": 377,
+    "SASA": 16001,
+    "SISE": 848,
+    "TAVHL": 122,
+    "TCELL": 333,
+    "THYAO": 114,
+    "TOASO": 114,
+    "TRALT": 667,
+    "TRMET": 237,
+    "TTKOM": 609,
+    "TUPRS": 81,
+    "VAKBN": 984,
+    "YKBNK": 930
+   },
+   "positions": {}
+  },
+  "sistem": {
+   "cash": 1000000.0,
+   "pending": {
+    "AEFES": 1745,
+    "AKBNK": 384,
+    "ASELS": 73,
+    "ASTOR": 95,
+    "BIMAS": 78,
+    "EKGYO": 1177,
+    "ENKAI": 331,
+    "EREGL": 667,
+    "FROTO": 433,
+    "GARAN": 242,
+    "GUBRF": 19,
+    "ISCTR": 1716,
+    "KCHOL": 136,
+    "KRDMD": 647,
+    "MGROS": 31,
+    "PETKM": 154,
+    "PGSUS": 226,
+    "SAHOL": 321,
+    "SASA": 10761,
+    "SISE": 554,
+    "TAVHL": 104,
+    "TCELL": 301,
+    "THYAO": 114,
+    "TOASO": 58,
+    "TRALT": 541,
+    "TRMET": 214,
+    "TTKOM": 357,
+    "TUPRS": 68,
+    "VAKBN": 604,
+    "YKBNK": 743
+   },
+   "positions": {}
+  }
+ },
+ "events": {
+  "AEFES": [],
+  "AKBNK": [],
+  "ASELS": [],
+  "ASTOR": [],
+  "BIMAS": [],
+  "EKGYO": [],
+  "ENKAI": [],
+  "EREGL": [],
+  "FROTO": [],
+  "GARAN": [],
+  "GUBRF": [
+   {
+    "m": 0.3500015839281849,
+    "t0": "2026-09-25",
+    "trgt": 0.03600013861704385
+   }
+  ],
+  "ISCTR": [],
+  "KCHOL": [],
+  "KRDMD": [],
+  "MGROS": [
+   {
+    "m": 0.5445315787222769,
+    "t0": "2026-09-25",
+    "trgt": 0.023577448349976868
+   }
+  ],
+  "PETKM": [
+   {
+    "m": 0.18568178156665321,
+    "t0": "2026-09-25",
+    "trgt": 0.04218394323561954
+   }
+  ],
+  "PGSUS": [],
+  "SAHOL": [],
+  "SASA": [],
+  "SISE": [],
+  "TAVHL": [],
+  "TCELL": [],
+  "THYAO": [],
+  "TOASO": [
+   {
+    "m": 0.5569667488135783,
+    "t0": "2026-09-25",
+    "trgt": 0.025943823419952477
+   }
+  ],
+  "TRALT": [],
+  "TRMET": [],
+  "TTKOM": [],
+  "TUPRS": [],
+  "VAKBN": [],
+  "YKBNK": []
+ },
+ "last_close": {
+  "AEFES": 18.829999923706055,
+  "AKBNK": 70.9000015258789,
+  "ASELS": 372.25,
+  "ASTOR": 261.25,
+  "BIMAS": 424.75,
+  "EKGYO": 19.25,
+  "ENKAI": 86.44999694824219,
+  "EREGL": 37.7400016784668,
+  "FROTO": 76.80000305175781,
+  "GARAN": 129.8000030517578,
+  "GUBRF": 458.0,
+  "ISCTR": 13.069999694824219,
+  "KCHOL": 216.5,
+  "KRDMD": 46.959999084472656,
+  "MGROS": 523.5,
+  "PETKM": 21.059999465942383,
+  "PGSUS": 146.6999969482422,
+  "SAHOL": 88.25,
+  "SASA": 2.0799999237060547,
+  "SISE": 39.2400016784668,
+  "TAVHL": 272.75,
+  "TCELL": 99.94999694824219,
+  "THYAO": 290.75,
+  "TOASO": 290.0,
+  "TRALT": 49.84000015258789,
+  "TRMET": 140.39999389648438,
+  "TTKOM": 54.650001525878906,
+  "TUPRS": 406.0,
+  "VAKBN": 33.79999923706055,
+  "YKBNK": 35.779998779296875
+ },
+ "last_date": "2026-09-25",
+ "start": "2026-09-25"
+}
