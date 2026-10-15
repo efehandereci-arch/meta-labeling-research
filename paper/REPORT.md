@@ -1,53 +1,67 @@
 # Paper trading — BIST 30 long meta-labeling overlay
 
-Son işlem günü: **2026-10-14** · başlangıç 2026-09-25 · sanal sermaye 1,000,000 TL · komisyon 10 bps + kayma 5 bps / yön
+Son işlem günü: **2026-10-15** · başlangıç 2026-09-25 · sanal sermaye 1,000,000 TL · komisyon 10 bps + kayma 5 bps / yön
 
 | Portföy | Değer (TL) | Getiri | Sharpe (≥20 gün) | Max DD |
 |---|---|---|---|---|
-| Sistem | 968,850 | -3.12% | n/a | -3.8% |
-| Buy&Hold (eşit ağırlık) | 956,697 | -4.33% | n/a | -5.4% |
-| XU030 endeksi | 943,618 | -5.64% | n/a | -6.9% |
+| Sistem | 965,214 | -3.48% | n/a | -3.8% |
+| Buy&Hold (eşit ağırlık) | 952,662 | -4.73% | n/a | -5.4% |
+| XU030 endeksi | 939,787 | -6.02% | n/a | -6.9% |
 
-Sistemin yatırım oranı: 43% · nakit 551,073 TL · 14 gün
+Sistemin yatırım oranı: 44% · nakit 542,891 TL · 15 gün
 
 ## Bugünkü kararlar
 
 | Hisse | Kapanış | Maruziyet | Vol tavanı | Yeni olay | m | P(Y=1) | Aktif olay | Emir (lot) | Not |
 |---|---|---|---|---|---|---|---|---|---|
-| AEFES | 18.24 | 0.443 | 1.000 |  |  |  | 4 | 0 |  |
-| AKBNK | 67.10 | 0.282 | 0.952 | evet | 0.304 | 0.525 | 2 | 0 |  |
-| ASELS | 348.00 | 0.445 | 0.681 |  |  |  | 1 | 0 |  |
-| ASTOR | 193.00 | 0.573 | 0.573 | evet |  | 0.343 | 3 | 5 | conformal ısınma |
-| BIMAS | 408.00 | 0.994 | 0.994 |  |  |  | 1 | -3 |  |
-| EKGYO | 19.51 | 0.256 | 0.816 |  |  |  | 2 | 0 |  |
-| ENKAI | 79.75 | 0.665 | 0.903 |  |  |  | 2 | 12 |  |
-| EREGL | 37.10 | 0.269 | 0.901 |  |  |  | 3 | 0 |  |
-| FROTO | 71.85 | 1.000 | 1.000 |  |  |  | 1 | 15 |  |
-| GARAN | 130.50 | 0.347 | 1.000 |  |  |  | 1 | 0 |  |
-| GUBRF | 391.00 | 0.314 | 0.845 |  |  |  | 3 | 2 |  |
-| ISCTR | 13.01 | 0.233 | 0.764 |  |  |  | 1 | -170 |  |
-| KCHOL | 211.20 | 0.595 | 0.952 |  |  |  | 3 | 0 |  |
-| KRDMD | 43.16 | 0.572 | 1.000 |  |  |  | 2 | 17 |  |
-| MGROS | 484.75 | 0.581 | 1.000 | evet | 0.604 | 0.556 | 2 | 3 |  |
-| PETKM | 20.78 | 0.244 | 0.619 |  |  |  | 1 | 0 |  |
-| PGSUS | 129.70 | 0.000 | 1.000 | evet | 0.000 | 0.483 | 2 | 0 |  |
-| SAHOL | 84.75 | 0.496 | 0.886 |  |  |  | 1 | 0 |  |
-| SASA | 1.82 | 0.701 | 0.701 | evet |  |  | 3 | 992 | eksik öznitelik: volume_z |
-| SISE | 37.42 | 0.366 | 0.787 |  |  |  | 1 | 20 |  |
-| TAVHL | 271.25 | 0.578 | 0.989 |  |  |  | 2 | 0 |  |
-| TCELL | 98.30 | 0.504 | 1.000 |  |  |  | 2 | 0 |  |
-| THYAO | 279.25 | 0.460 | 1.000 | evet | 0.498 | 0.556 | 2 | 0 |  |
-| TOASO | 250.25 | 0.436 | 0.892 | evet | 0.473 | 0.554 | 3 | 0 |  |
-| TRALT | 42.64 | 0.307 | 0.842 | evet | 0.368 | 0.529 | 2 | 18 |  |
-| TRMET | 129.30 | 0.296 | 0.938 | evet | 0.317 | 0.523 | 2 | 0 |  |
-| TTKOM | 52.50 | 0.155 | 0.721 |  |  |  | 2 | 15 |  |
-| TUPRS | 391.00 | 0.865 | 0.865 |  |  |  | 3 | 2 |  |
-| VAKBN | 34.24 | 0.257 | 0.734 |  |  |  | 1 | 28 |  |
-| YKBNK | 35.94 | 0.143 | 0.899 |  |  |  | 2 | 0 |  |
+| AEFES | 18.07 | 0.486 | 1.000 | evet | 0.657 | 0.574 | 5 | 94 |  |
+| AKBNK | 68.00 | 0.286 | 0.964 |  |  |  | 2 | 0 |  |
+| ASELS | 351.00 | 0.453 | 0.693 |  |  |  | 1 | 0 |  |
+| ASTOR | 183.20 | 0.581 | 0.581 |  |  |  | 3 | 6 |  |
+| BIMAS | 401.50 | 0.996 | 1.000 | evet | 0.994 | 0.572 | 2 | 0 |  |
+| EKGYO | 19.80 | 0.260 | 0.828 |  |  |  | 2 | 0 |  |
+| ENKAI | 77.80 | 0.653 | 0.903 | evet | 0.736 | 0.562 | 2 | 0 |  |
+| EREGL | 37.40 | 0.274 | 0.917 |  |  |  | 3 | 0 |  |
+| FROTO | 70.75 | 1.000 | 1.000 | evet |  |  | 1 | 0 | eksik öznitelik: ret_skew |
+| GARAN | 133.90 | 0.373 | 1.000 | evet | 0.399 | 0.533 | 2 | 5 |  |
+| GUBRF | 394.50 | 0.319 | 0.859 |  |  |  | 3 | 0 |  |
+| ISCTR | 13.10 | 0.238 | 0.778 |  |  |  | 1 | 0 |  |
+| KCHOL | 210.90 | 0.607 | 0.971 |  |  |  | 3 | 0 |  |
+| KRDMD | 42.96 | 0.572 | 1.000 |  |  |  | 2 | 0 |  |
+| MGROS | 470.00 | 0.639 | 1.000 | evet | 0.673 | 0.565 | 2 | 5 |  |
+| PETKM | 20.34 | 0.248 | 0.627 |  |  |  | 1 | 0 |  |
+| PGSUS | 129.40 | 0.000 | 1.000 |  |  |  | 2 | 0 |  |
+| SAHOL | 85.35 | 0.505 | 0.901 |  |  |  | 1 | 0 |  |
+| SASA | 1.79 | 0.715 | 0.715 |  |  |  | 3 | 402 |  |
+| SISE | 37.26 | 0.373 | 0.803 |  |  |  | 1 | 0 |  |
+| TAVHL | 271.00 | 0.585 | 1.000 |  |  |  | 2 | 0 |  |
+| TCELL | 97.85 | 0.504 | 1.000 |  |  |  | 2 | 0 |  |
+| THYAO | 276.75 | 0.460 | 1.000 |  |  |  | 2 | 0 |  |
+| TOASO | 246.30 | 0.437 | 0.907 |  |  |  | 2 | 0 |  |
+| TRALT | 42.86 | 0.312 | 0.858 |  |  |  | 2 | 0 |  |
+| TRMET | 127.90 | 0.301 | 0.956 |  |  |  | 2 | 6 |  |
+| TTKOM | 52.30 | 0.159 | 0.735 |  |  |  | 2 | 0 |  |
+| TUPRS | 384.50 | 0.872 | 0.872 |  |  |  | 3 | 0 |  |
+| VAKBN | 34.08 | 0.262 | 0.748 |  |  |  | 1 | 0 |  |
+| YKBNK | 36.30 | 0.146 | 0.915 |  |  |  | 2 | 0 |  |
 
-## Bugünkü dolumlar (2)
+## Bugünkü dolumlar (16)
 
-- buyhold GUBRF: +0 lot @ 4.49 (maliyet 0 TL) — temettü
-- sistem GUBRF: +0 lot @ 4.49 (maliyet 0 TL) — temettü
+- buyhold ASTOR: +0 lot @ 2.19 (maliyet 0 TL) — temettü
+- sistem ASTOR: +0 lot @ 2.19 (maliyet 0 TL) — temettü
+- sistem BIMAS: -3 lot @ 404.80 (maliyet 1 TL)
+- sistem ISCTR: -170 lot @ 12.91 (maliyet 2 TL)
+- sistem ASTOR: +5 lot @ 189.89 (maliyet 1 TL)
+- sistem ENKAI: +12 lot @ 79.34 (maliyet 1 TL)
+- sistem FROTO: +15 lot @ 71.59 (maliyet 1 TL)
+- sistem GUBRF: +2 lot @ 395.20 (maliyet 1 TL)
+- sistem KRDMD: +17 lot @ 43.02 (maliyet 1 TL)
+- sistem MGROS: +3 lot @ 484.24 (maliyet 1 TL)
+- sistem SASA: +992 lot @ 1.80 (maliyet 2 TL)
+- sistem SISE: +20 lot @ 37.42 (maliyet 1 TL)
+- sistem TRALT: +18 lot @ 42.92 (maliyet 1 TL)
+- sistem TTKOM: +15 lot @ 52.43 (maliyet 1 TL)
+- sistem TUPRS: +2 lot @ 388.19 (maliyet 1 TL)
+- sistem VAKBN: +28 lot @ 34.04 (maliyet 1 TL)
 
 _Sanal para; gerçek emir verilmez. Karar kuralları: `docs/preregistration/long_overlay.md`. Kilitli testte bu sistem 12 hissenin 9'unda B&H'nin gerisinde kaldı; bu çalışma ileriye dönük (görülmemiş veride) testtir._
