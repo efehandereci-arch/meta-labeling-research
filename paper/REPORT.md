@@ -1,60 +1,63 @@
 # Paper trading — BIST 30 long meta-labeling overlay
 
-Son işlem günü: **2026-10-22** · başlangıç 2026-09-25 · sanal sermaye 1,000,000 TL · komisyon 10 bps + kayma 5 bps / yön
+Son işlem günü: **2026-10-23** · başlangıç 2026-09-25 · sanal sermaye 1,000,000 TL · komisyon 10 bps + kayma 5 bps / yön
 
 | Portföy | Değer (TL) | Getiri | Sharpe (≥20 gün) | Max DD |
 |---|---|---|---|---|
-| Sistem | 930,514 | -6.95% | n/a | -6.9% |
-| Buy&Hold (eşit ağırlık) | 883,420 | -11.66% | n/a | -11.7% |
-| XU030 endeksi | 878,589 | -12.14% | n/a | -12.1% |
+| Sistem | 923,334 | -7.67% | -6.90 | -7.7% |
+| Buy&Hold (eşit ağırlık) | 866,492 | -13.35% | -6.55 | -13.4% |
+| XU030 endeksi | 870,022 | -13.00% | -5.86 | -13.0% |
 
-Sistemin yatırım oranı: 47% · nakit 497,208 TL · 20 gün
+Sistemin yatırım oranı: 43% · nakit 522,549 TL · 21 gün
 
 ## Bugünkü kararlar
 
 | Hisse | Kapanış | Maruziyet | Vol tavanı | Yeni olay | m | P(Y=1) | Aktif olay | Emir (lot) | Not |
 |---|---|---|---|---|---|---|---|---|---|
-| AEFES | 16.27 | 0.657 | 0.969 | evet | 0.595 | 0.571 | 2 | 0 |  |
-| AKBNK | 64.60 | 0.290 | 0.979 | evet | 0.289 | 0.520 | 2 | 0 |  |
-| ASELS | 338.25 | 0.440 | 0.668 |  |  |  | 1 | 0 |  |
-| ASTOR | 150.00 | 0.583 | 0.583 |  |  |  | 2 | 5 |  |
-| BIMAS | 369.00 | 0.661 | 0.820 | evet | 0.818 | 0.571 | 3 | 0 |  |
-| EKGYO | 17.75 | 0.219 | 0.763 | evet | 0.287 | 0.532 | 1 | 0 |  |
-| ENKAI | 73.50 | 0.579 | 0.888 | evet | 0.661 | 0.554 | 2 | -19 |  |
-| EREGL | 35.10 | 0.529 | 0.847 | evet | 0.816 | 0.609 | 2 | 99 |  |
-| FROTO | 66.55 | 1.000 | 1.000 |  |  |  | 2 | 0 |  |
-| GARAN | 128.50 | 0.407 | 1.000 | evet | 0.415 | 0.534 | 2 | 0 |  |
-| GUBRF | 331.50 | 0.280 | 0.761 | evet | 0.480 | 0.582 | 2 | 0 |  |
-| ISCTR | 12.42 | 0.172 | 0.812 | evet | 0.212 | 0.523 | 1 | -1552 |  |
-| KCHOL | 196.10 | 0.525 | 0.914 | evet | 0.571 | 0.555 | 3 | -4 |  |
-| KRDMD | 39.88 | 0.587 | 0.952 | evet | 0.602 | 0.574 | 2 | 0 |  |
-| MGROS | 440.50 | 0.594 | 0.968 | evet | 0.628 | 0.564 | 3 | 0 |  |
-| PETKM | 18.30 | 0.248 | 0.654 | evet | 0.375 | 0.550 | 2 | 0 |  |
-| PGSUS | 126.40 | 0.127 | 1.000 | evet | 0.191 | 0.509 | 3 | 20 |  |
-| SAHOL | 87.55 | 0.486 | 0.924 |  |  |  | 1 | 0 |  |
-| SASA | 1.64 | 0.731 | 0.731 |  |  |  | 3 | 570 |  |
-| SISE | 34.08 | 0.399 | 0.813 | evet | 0.501 | 0.549 | 2 | 0 |  |
-| TAVHL | 267.00 | 0.417 | 0.843 | evet | 0.495 | 0.568 | 1 | -15 |  |
-| TCELL | 93.30 | 0.500 | 1.000 |  |  |  | 2 | 0 |  |
-| THYAO | 259.00 | 0.541 | 1.000 | evet | 0.542 | 0.563 | 2 | 0 |  |
-| TOASO | 223.70 | 0.472 | 0.918 |  |  |  | 1 | 0 |  |
-| TRALT | 36.48 | 0.247 | 0.765 | evet | 0.323 | 0.525 | 1 | -41 |  |
-| TRMET | 106.20 | 0.227 | 0.821 | evet | 0.277 | 0.523 | 1 | -9 |  |
-| TTKOM | 47.38 | 0.178 | 0.720 | evet | 0.275 | 0.538 | 2 | 21 |  |
-| TUPRS | 352.25 | 0.647 | 0.853 | evet | 0.759 | 0.584 | 1 | -17 |  |
-| VAKBN | 31.14 | 0.260 | 0.766 | evet | 0.343 | 0.537 | 2 | 0 |  |
-| YKBNK | 35.32 | 0.318 | 0.962 | evet | 0.346 | 0.540 | 3 | 0 |  |
+| AEFES | 16.22 | 0.670 | 0.988 |  |  |  | 2 | 0 |  |
+| AKBNK | 63.35 | 0.286 | 0.989 |  |  |  | 1 | 0 |  |
+| ASELS | 338.00 | 0.449 | 0.681 |  |  |  | 1 | 0 |  |
+| ASTOR | 142.60 | 0.590 | 0.590 | evet |  | 0.278 | 2 | 7 | conformal ısınma |
+| BIMAS | 373.00 | 0.669 | 0.830 |  |  |  | 3 | 0 |  |
+| EKGYO | 17.02 | 0.213 | 0.754 | evet | 0.277 | 0.531 | 2 | 0 |  |
+| ENKAI | 74.50 | 0.582 | 0.893 |  |  |  | 2 | 0 |  |
+| EREGL | 31.60 | 0.317 | 0.663 | evet | 0.478 | 0.579 | 1 | -158 |  |
+| FROTO | 65.05 | 0.818 | 1.000 | evet | 0.818 | 0.549 | 2 | -79 |  |
+| GARAN | 126.50 | 0.415 | 1.000 |  |  |  | 1 | 5 |  |
+| GUBRF | 298.50 | 0.297 | 0.686 | evet | 0.433 | 0.581 | 1 | 5 |  |
+| ISCTR | 12.17 | 0.174 | 0.821 |  |  |  | 1 | 0 |  |
+| KCHOL | 197.50 | 0.534 | 0.929 |  |  |  | 3 | 0 |  |
+| KRDMD | 38.60 | 0.570 | 0.951 | evet | 0.595 | 0.572 | 2 | 0 |  |
+| MGROS | 431.50 | 0.615 | 0.980 |  |  |  | 1 | 2 |  |
+| PETKM | 18.06 | 0.253 | 0.666 |  |  |  | 2 | 0 |  |
+| PGSUS | 124.70 | 0.127 | 1.000 |  |  |  | 3 | 0 |  |
+| SAHOL | 87.00 | 0.520 | 0.941 | evet | 0.579 | 0.565 | 2 | 16 |  |
+| SASA | 1.60 | 0.743 | 0.743 | evet |  |  | 2 | 472 | eksik öznitelik: volume_z |
+| SISE | 33.88 | 0.408 | 0.830 |  |  |  | 2 | 0 |  |
+| TAVHL | 265.00 | 0.425 | 0.859 |  |  |  | 1 | 0 |  |
+| TCELL | 90.10 | 0.423 | 1.000 | evet | 0.423 | 0.550 | 1 | -17 |  |
+| THYAO | 258.00 | 0.541 | 1.000 |  |  |  | 2 | 0 |  |
+| TOASO | 222.60 | 0.481 | 0.936 |  |  |  | 1 | 0 |  |
+| TRALT | 35.94 | 0.252 | 0.780 |  |  |  | 1 | 0 |  |
+| TRMET | 103.10 | 0.230 | 0.832 |  |  |  | 1 | 0 |  |
+| TTKOM | 46.04 | 0.182 | 0.723 | evet | 0.227 | 0.530 | 2 | 0 |  |
+| TUPRS | 360.75 | 0.647 | 0.853 |  |  |  | 1 | 0 |  |
+| VAKBN | 30.06 | 0.189 | 0.765 | evet | 0.150 | 0.500 | 2 | -49 |  |
+| YKBNK | 34.68 | 0.337 | 0.972 |  |  |  | 1 | 31 |  |
 
-## Bugünkü dolumlar (9)
+## Bugünkü dolumlar (12)
 
-- sistem GUBRF: -3 lot @ 350.57 (maliyet 1 TL)
-- sistem TOASO: -59 lot @ 227.09 (maliyet 13 TL)
-- sistem AEFES: +218 lot @ 16.78 (maliyet 4 TL)
-- sistem ASTOR: +8 lot @ 155.68 (maliyet 1 TL)
-- sistem EREGL: +26 lot @ 36.54 (maliyet 1 TL)
-- sistem KRDMD: +23 lot @ 41.92 (maliyet 1 TL)
-- sistem PGSUS: +11 lot @ 128.56 (maliyet 1 TL)
-- sistem THYAO: +4 lot @ 266.13 (maliyet 1 TL)
-- sistem TRALT: +19 lot @ 39.80 (maliyet 1 TL)
+- sistem ENKAI: -19 lot @ 74.06 (maliyet 1 TL)
+- sistem ISCTR: -1552 lot @ 12.45 (maliyet 19 TL)
+- sistem KCHOL: -4 lot @ 196.20 (maliyet 1 TL)
+- sistem TAVHL: -15 lot @ 268.12 (maliyet 4 TL)
+- sistem TRALT: -41 lot @ 36.84 (maliyet 2 TL)
+- sistem TRMET: -9 lot @ 107.75 (maliyet 1 TL)
+- sistem TUPRS: -17 lot @ 354.82 (maliyet 6 TL)
+- sistem ASTOR: +5 lot @ 150.07 (maliyet 1 TL)
+- sistem EREGL: +99 lot @ 34.96 (maliyet 3 TL)
+- sistem PGSUS: +20 lot @ 126.46 (maliyet 3 TL)
+- sistem SASA: +570 lot @ 1.63 (maliyet 1 TL)
+- sistem TTKOM: +21 lot @ 47.62 (maliyet 1 TL)
 
 _Sanal para; gerçek emir verilmez. Karar kuralları: `docs/preregistration/long_overlay.md`. Kilitli testte bu sistem 12 hissenin 9'unda B&H'nin gerisinde kaldı; bu çalışma ileriye dönük (görülmemiş veride) testtir._
