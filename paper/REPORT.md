@@ -1,65 +1,66 @@
 # Paper trading — BIST 30 long meta-labeling overlay
 
-Son işlem günü: **2026-11-18** · başlangıç 2026-09-25 · sanal sermaye 1,000,000 TL · komisyon 10 bps + kayma 5 bps / yön
+Son işlem günü: **2026-11-19** · başlangıç 2026-09-25 · sanal sermaye 1,000,000 TL · komisyon 10 bps + kayma 5 bps / yön
 
 | Portföy | Değer (TL) | Getiri | Sharpe (≥20 gün) | Max DD |
 |---|---|---|---|---|
-| Sistem | 938,564 | -6.14% | -2.94 | -9.1% |
-| Buy&Hold (eşit ağırlık) | 902,474 | -9.75% | -2.19 | -17.0% |
-| XU030 endeksi | 903,794 | -9.62% | -2.20 | -15.8% |
+| Sistem | 937,065 | -6.29% | -2.98 | -9.1% |
+| Buy&Hold (eşit ağırlık) | 900,925 | -9.91% | -2.20 | -17.0% |
+| XU030 endeksi | 896,720 | -10.33% | -2.35 | -15.8% |
 
-Sistemin yatırım oranı: 38% · nakit 582,721 TL · 38 gün
+Sistemin yatırım oranı: 39% · nakit 571,465 TL · 39 gün
 
 ## Bugünkü kararlar
 
 | Hisse | Kapanış | Maruziyet | Vol tavanı | Yeni olay | m | P(Y=1) | Aktif olay | Emir (lot) | Not |
 |---|---|---|---|---|---|---|---|---|---|
-| AEFES | 16.10 | 0.488 | 1.000 | evet | 0.488 | 0.552 | 1 | 148 |  |
-| AKBNK | 67.10 | 0.278 | 0.964 | evet | 0.299 | 0.522 | 3 | 0 |  |
-| ASELS | 343.75 | 0.555 | 0.757 |  |  |  | 1 | 0 |  |
-| ASTOR | 152.10 | 0.516 | 0.516 | evet |  | 0.735 | 3 | 5 | conformal ısınma |
-| BIMAS | 389.75 | 0.496 | 0.876 |  |  |  | 2 | 0 |  |
-| EKGYO | 17.87 | 0.229 | 0.828 | evet | 0.297 | 0.530 | 2 | 0 |  |
-| ENKAI | 80.00 | 0.787 | 0.999 | evet | 0.818 | 0.561 | 2 | 20 |  |
-| EREGL | 31.20 | 0.271 | 0.715 | evet | 0.447 | 0.569 | 3 | 31 |  |
-| FROTO | 72.60 | 0.423 | 0.902 |  |  |  | 2 | 0 |  |
-| GARAN | 145.70 | 0.378 | 1.000 | evet | 0.398 | 0.535 | 3 | 5 |  |
-| GUBRF | 276.25 | 0.146 | 0.638 | evet | 0.233 | 0.540 | 3 | 0 |  |
-| ISCTR | 12.64 | 0.414 | 0.854 | evet | 0.506 | 0.566 | 2 | 151 |  |
-| KCHOL | 195.40 | 0.579 | 0.938 | evet | 0.611 | 0.557 | 2 | 4 |  |
-| KRDMD | 37.60 | 0.364 | 0.804 | evet | 0.488 | 0.572 | 3 | 24 |  |
-| MGROS | 455.00 | 0.492 | 0.967 | evet | 0.546 | 0.554 | 4 | 0 |  |
-| PETKM | 15.40 | 0.221 | 0.707 | evet | 0.000 | 0.467 | 2 | -371 |  |
-| PGSUS | 155.00 | 0.261 | 0.937 |  |  |  | 2 | 0 |  |
-| SAHOL | 80.60 | 0.566 | 0.980 | evet | 0.648 | 0.571 | 2 | 29 |  |
-| SASA | 1.50 | 0.787 | 0.787 | evet |  |  | 2 | 523 | eksik öznitelik: volume_z |
-| SISE | 33.58 | 0.397 | 0.817 | evet | 0.497 | 0.548 | 4 | 31 |  |
-| TAVHL | 291.00 | 0.402 | 0.864 | evet | 0.488 | 0.565 | 3 | 0 |  |
-| TCELL | 94.70 | 0.370 | 0.959 | evet | 0.398 | 0.551 | 2 | 0 |  |
-| THYAO | 323.75 | 0.350 | 0.912 |  |  |  | 2 | 0 |  |
-| TOASO | 241.70 | 0.272 | 0.747 |  |  |  | 2 | 0 |  |
-| TRALT | 35.96 | 0.201 | 0.731 | evet | 0.284 | 0.522 | 2 | 25 |  |
-| TRMET | 109.90 | 0.209 | 0.815 | evet | 0.266 | 0.521 | 4 | 7 |  |
-| TTKOM | 49.30 | 0.174 | 0.799 | evet | 0.231 | 0.528 | 3 | 0 |  |
-| TUPRS | 345.75 | 0.716 | 0.905 |  |  |  | 2 | 0 |  |
-| VAKBN | 32.78 | 0.280 | 0.851 |  |  |  | 1 | 0 |  |
-| YKBNK | 36.52 | 0.349 | 1.000 | evet | 0.367 | 0.539 | 3 | 28 |  |
+| AEFES | 16.24 | 0.488 | 1.000 |  |  |  | 1 | 0 |  |
+| AKBNK | 66.85 | 0.284 | 0.983 |  |  |  | 3 | 0 |  |
+| ASELS | 337.00 | 0.562 | 0.766 |  |  |  | 1 | 2 |  |
+| ASTOR | 152.90 | 0.526 | 0.526 |  |  |  | 3 | 0 |  |
+| BIMAS | 384.00 | 0.580 | 0.886 | evet | 0.834 | 0.567 | 3 | 8 |  |
+| EKGYO | 17.75 | 0.233 | 0.845 |  |  |  | 2 | 43 |  |
+| ENKAI | 79.25 | 0.787 | 1.000 |  |  |  | 2 | 0 |  |
+| EREGL | 31.28 | 0.276 | 0.729 |  |  |  | 3 | 0 |  |
+| FROTO | 71.70 | 0.429 | 0.916 |  |  |  | 2 | 0 |  |
+| GARAN | 146.40 | 0.378 | 1.000 |  |  |  | 3 | 0 |  |
+| GUBRF | 273.75 | 0.150 | 0.651 |  |  |  | 2 | 3 |  |
+| ISCTR | 12.74 | 0.422 | 0.870 |  |  |  | 2 | 0 |  |
+| KCHOL | 193.70 | 0.590 | 0.955 |  |  |  | 2 | 0 |  |
+| KRDMD | 37.74 | 0.380 | 0.819 |  |  |  | 2 | 0 |  |
+| MGROS | 449.00 | 0.518 | 0.982 |  |  |  | 3 | 3 |  |
+| PETKM | 15.39 | 0.225 | 0.720 |  |  |  | 2 | 0 |  |
+| PGSUS | 156.60 | 0.266 | 0.955 |  |  |  | 2 | 0 |  |
+| SAHOL | 80.20 | 0.577 | 1.000 |  |  |  | 2 | 0 |  |
+| SASA | 1.50 | 0.803 | 0.803 |  |  |  | 2 | 0 |  |
+| SISE | 33.32 | 0.409 | 0.833 |  |  |  | 3 | 0 |  |
+| TAVHL | 291.50 | 0.419 | 0.881 |  |  |  | 2 | 3 |  |
+| TCELL | 93.05 | 0.385 | 0.965 |  |  |  | 1 | 12 |  |
+| THYAO | 328.25 | 0.369 | 0.928 | evet | 0.425 | 0.563 | 3 | 3 |  |
+| TOASO | 249.30 | 0.272 | 0.747 |  |  |  | 2 | 0 |  |
+| TRALT | 35.64 | 0.205 | 0.746 |  |  |  | 2 | 0 |  |
+| TRMET | 110.40 | 0.213 | 0.831 |  |  |  | 4 | 0 |  |
+| TTKOM | 48.80 | 0.177 | 0.813 |  |  |  | 3 | 0 |  |
+| TUPRS | 334.75 | 0.763 | 0.893 | evet | 0.861 | 0.590 | 2 | 7 |  |
+| VAKBN | 33.36 | 0.284 | 0.862 |  |  |  | 1 | 0 |  |
+| YKBNK | 36.76 | 0.349 | 1.000 |  |  |  | 3 | 0 |  |
 
-## Bugünkü dolumlar (14)
+## Bugünkü dolumlar (15)
 
-- sistem ASELS: -16 lot @ 341.33 (maliyet 5 TL)
-- sistem EREGL: -25 lot @ 31.82 (maliyet 1 TL)
-- sistem PGSUS: -49 lot @ 157.62 (maliyet 8 TL)
-- sistem AEFES: +41 lot @ 16.18 (maliyet 1 TL)
-- sistem ASTOR: +5 lot @ 159.58 (maliyet 1 TL)
-- sistem BIMAS: +2 lot @ 393.45 (maliyet 1 TL)
-- sistem KCHOL: +6 lot @ 201.90 (maliyet 1 TL)
-- sistem MGROS: +2 lot @ 465.98 (maliyet 1 TL)
-- sistem PETKM: +46 lot @ 16.12 (maliyet 1 TL)
-- sistem SAHOL: +31 lot @ 83.04 (maliyet 3 TL)
-- sistem SASA: +487 lot @ 1.56 (maliyet 1 TL)
-- sistem TCELL: +8 lot @ 97.05 (maliyet 1 TL)
-- sistem TUPRS: +7 lot @ 343.92 (maliyet 2 TL)
-- sistem VAKBN: +21 lot @ 33.06 (maliyet 1 TL)
+- sistem PETKM: -371 lot @ 15.45 (maliyet 6 TL)
+- sistem AEFES: +148 lot @ 16.17 (maliyet 2 TL)
+- sistem ASTOR: +5 lot @ 154.58 (maliyet 1 TL)
+- sistem ENKAI: +20 lot @ 80.29 (maliyet 2 TL)
+- sistem EREGL: +31 lot @ 31.32 (maliyet 1 TL)
+- sistem GARAN: +5 lot @ 146.57 (maliyet 1 TL)
+- sistem ISCTR: +151 lot @ 12.70 (maliyet 2 TL)
+- sistem KCHOL: +4 lot @ 195.90 (maliyet 1 TL)
+- sistem KRDMD: +24 lot @ 37.82 (maliyet 1 TL)
+- sistem SAHOL: +29 lot @ 80.94 (maliyet 2 TL)
+- sistem SASA: +523 lot @ 1.51 (maliyet 1 TL)
+- sistem SISE: +31 lot @ 33.58 (maliyet 1 TL)
+- sistem TRALT: +25 lot @ 36.20 (maliyet 1 TL)
+- sistem TRMET: +7 lot @ 110.05 (maliyet 1 TL)
+- sistem YKBNK: +28 lot @ 36.74 (maliyet 1 TL)
 
 _Sanal para; gerçek emir verilmez. Karar kuralları: `docs/preregistration/long_overlay.md`. Kilitli testte bu sistem 12 hissenin 9'unda B&H'nin gerisinde kaldı; bu çalışma ileriye dönük (görülmemiş veride) testtir._
